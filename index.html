@@ -370,8 +370,8 @@
                 if (stored) {
                     savedTrips = JSON.parse(stored);
                     console.log('📁 Loaded', savedTrips.length, 'trips from localStorage');
-                    console.log('📋 Trip IDs:', savedTrips.map(t => t.id));
-                    console.log('📋 Trip names:', savedTrips.map(t => t.name));
+                    console.log('📋 Trip IDs:', JSON.stringify(savedTrips.map(t => t.id)));
+                    console.log('📋 Trip names:', JSON.stringify(savedTrips.map(t => t.name)));
                 } else {
                     savedTrips = [];
                     console.log('📁 No saved trips found, starting fresh');
@@ -480,8 +480,8 @@
         function editTrip(tripId) {
             console.log('📝 Attempting to edit trip with ID:', tripId);
             console.log('📋 Available trips count:', savedTrips.length);
-            console.log('📋 Available trip IDs:', savedTrips.map(t => t.id));
-            console.log('📋 Available trip names:', savedTrips.map(t => t.name));
+            console.log('📋 Available trip IDs:', JSON.stringify(savedTrips.map(t => t.id)));
+            console.log('📋 Available trip names:', JSON.stringify(savedTrips.map(t => t.name)));
             
             const trip = savedTrips.find(t => t.id === tripId);
             if (trip) {
@@ -528,85 +528,61 @@
                 renderApp();
             } else {
                 console.error('❌ Trip not found:', tripId);
-                console.error('❌ Available trip IDs:', savedTrips.map(t => t.id));
-                console.error('❌ Available trip names:', savedTrips.map(t => t.name));
+                console.error('❌ Available trip IDs:', JSON.stringify(savedTrips.map(t => t.id)));
+                console.error('❌ Available trip names:', JSON.stringify(savedTrips.map(t => t.name)));
                 alert('Trip not found. The trip may have been deleted or there may be a data issue.');
             }
         }
         
-        // API-based booking functions
+        // API-based booking functions (with fallback to enhanced mock data)
         async function searchAccommodations(destination, checkIn, checkOut) {
-            try {
-                // Using Booking.com API (simplified for demo)
-                const response = await fetch(`https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination?query=${destination}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-RapidAPI-Key': 'your-api-key-here', // Would need real API key
-                        'X-RapidAPI-Host': 'booking-com15.p.rapidapi.com'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.data || [];
-                }
-            } catch (error) {
-                console.log('API search failed, using mock data:', error);
-            }
+            console.log('🏨 Searching accommodations for:', destination);
             
-            // Fallback to mock data with realistic booking URLs
-            return [
+            // Skip API calls that require keys and use enhanced mock data
+            console.log('🏨 Using enhanced mock data with realistic booking URLs');
+            
+            // Enhanced mock data with very realistic Booking.com URLs
+            const accommodations = [
                 {
-                    name: `${destination} Dive Resort`,
+                    name: `${destination} Dive Resort & Spa`,
                     type: "Resort",
                     rating: 4.5,
                     price_per_night: Math.round(Math.random() * 150 + 100),
-                    amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
+                    amenities: ["Dive Center", "Restaurant", "Pool", "WiFi", "Spa"],
                     image: "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}&nflt=review_score%3D90&review_score_scale=10`
                 },
                 {
-                    name: `${destination} Beach Hotel`,
+                    name: `${destination} Beachfront Hotel`,
                     type: "Hotel",
                     rating: 4.0,
                     price_per_night: Math.round(Math.random() * 100 + 80),
-                    amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
+                    amenities: ["Beach Access", "Restaurant", "Bar", "WiFi", "Ocean View"],
                     image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}&nflt=review_score%3D80&review_score_scale=10`
                 },
                 {
-                    name: `${destination} Guesthouse`,
+                    name: `${destination} Divers Guesthouse`,
                     type: "Guesthouse",
                     rating: 3.5,
                     price_per_night: Math.round(Math.random() * 60 + 40),
-                    amenities: ["Kitchen", "WiFi", "Garden"],
+                    amenities: ["Kitchen", "WiFi", "Garden", "Dive Storage"],
                     image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}&nflt=price_filter%3D1`
                 }
             ];
+            
+            return accommodations;
         }
         
         async function searchFlights(departure, arrival, date) {
-            try {
-                // Using Skyscanner API (simplified for demo)
-                const response = await fetch(`https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browsequotes/v1.0/US/${departure}/USD/${arrival}/${date}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-RapidAPI-Key': 'your-api-key-here',
-                        'X-RapidAPI-Host': 'skyscanner-skyscanner-flight-search-v1.p.rapidapi.com'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.Quotes || [];
-                }
-            } catch (error) {
-                console.log('Flight API search failed, using mock data:', error);
-            }
+            console.log('🛫 Searching flights from:', departure, 'to:', arrival);
             
-            // Fallback to mock data with realistic booking URLs
-            return [
+            // Skip API calls that require keys and use enhanced mock data
+            console.log('🛫 Using enhanced mock data with realistic airline URLs');
+            
+            // Enhanced mock data with very realistic airline booking URLs
+            const flights = [
                 {
                     airline: "Emirates",
                     departure: departure,
@@ -616,7 +592,7 @@
                     stops: "1 stop",
                     departureTime: "22:45",
                     arrivalTime: "17:15+1",
-                    bookingUrl: `https://www.emirates.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                    bookingUrl: `https://www.emirates.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}&tripType=roundtrip&adults=1&children=0&infants=0&class=economy&flexibleDates=false`
                 },
                 {
                     airline: "Qatar Airways",
@@ -627,7 +603,7 @@
                     stops: "1 stop",
                     departureTime: "09:30",
                     arrivalTime: "08:45+1",
-                    bookingUrl: `https://www.qatarairways.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                    bookingUrl: `https://www.qatarairways.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}&tripType=roundtrip&adults=1&children=0&infants=0&cabin=economy&flexibleDates=no`
                 },
                 {
                     airline: "Singapore Airlines",
@@ -638,59 +614,51 @@
                     stops: "2 stops",
                     departureTime: "15:20",
                     arrivalTime: "14:40+2",
-                    bookingUrl: `https://www.singaporeair.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                    bookingUrl: `https://www.singaporeair.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}&tripType=return&adults=1&children=0&infants=0&cabinClass=economy`
                 }
             ];
+            
+            return flights;
         }
         
         async function searchDivingPackages(destination) {
-            try {
-                // Using PADI API or similar (simplified for demo)
-                const response = await fetch(`https://api.padi.com/courses?location=${encodeURIComponent(destination)}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer your-api-key-here'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.courses || [];
-                }
-            } catch (error) {
-                console.log('Diving API search failed, using mock data:', error);
-            }
+            console.log('🤿 Searching diving packages for:', destination);
             
-            // Fallback to mock data with realistic booking URLs
-            return [
+            // Skip API calls that require keys and use enhanced mock data
+            console.log('🤿 Using enhanced mock data with realistic PADI URLs');
+            
+            // Enhanced mock data with very realistic PADI course URLs
+            const packages = [
                 {
-                    name: `${destination} Explorer Package`,
+                    name: `${destination} Open Water Diver Course`,
                     dives: 5,
                     duration: "3 days",
                     price: Math.round(Math.random() * 300 + 200),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks"],
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Certification"],
                     certification: "Open Water Required",
-                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver?location=${encodeURIComponent(destination)}`
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver?location=${encodeURIComponent(destination)}&language=en`
                 },
                 {
-                    name: `${destination} Adventure Package`,
+                    name: `${destination} Advanced Adventure Package`,
                     dives: 10,
                     duration: "5 days",
                     price: Math.round(Math.random() * 500 + 400),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Advanced Certification"],
                     certification: "Advanced Open Water",
-                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/advanced-open-water-diver?location=${encodeURIComponent(destination)}`
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/advanced-open-water-diver?location=${encodeURIComponent(destination)}&language=en`
                 },
                 {
-                    name: `${destination} Pro Package`,
+                    name: `${destination} Rescue Diver Pro Package`,
                     dives: 15,
                     duration: "7 days",
                     price: Math.round(Math.random() * 700 + 600),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera", "Rescue Certification"],
                     certification: "Rescue Diver",
-                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver?location=${encodeURIComponent(destination)}`
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver?location=${encodeURIComponent(destination)}&language=en`
                 }
             ];
+            
+            return packages;
         }
         function updateDestination() {
             const destination = document.getElementById('tripDestination').value;
