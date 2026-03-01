@@ -370,7 +370,8 @@
                 if (stored) {
                     savedTrips = JSON.parse(stored);
                     console.log('📁 Loaded', savedTrips.length, 'trips from localStorage');
-                    console.log('📋 Trip IDs:', savedTrips.map(t => ({ id: t.id, name: t.name })));
+                    console.log('📋 Trip IDs:', savedTrips.map(t => t.id));
+                    console.log('📋 Trip names:', savedTrips.map(t => t.name));
                 } else {
                     savedTrips = [];
                     console.log('📁 No saved trips found, starting fresh');
@@ -478,7 +479,9 @@
         
         function editTrip(tripId) {
             console.log('📝 Attempting to edit trip with ID:', tripId);
-            console.log('📋 Available trips:', savedTrips.map(t => ({ id: t.id, name: t.name })));
+            console.log('📋 Available trips count:', savedTrips.length);
+            console.log('📋 Available trip IDs:', savedTrips.map(t => t.id));
+            console.log('📋 Available trip names:', savedTrips.map(t => t.name));
             
             const trip = savedTrips.find(t => t.id === tripId);
             if (trip) {
@@ -526,11 +529,169 @@
             } else {
                 console.error('❌ Trip not found:', tripId);
                 console.error('❌ Available trip IDs:', savedTrips.map(t => t.id));
+                console.error('❌ Available trip names:', savedTrips.map(t => t.name));
                 alert('Trip not found. The trip may have been deleted or there may be a data issue.');
             }
         }
         
-        // New Workflow Functions
+        // API-based booking functions
+        async function searchAccommodations(destination, checkIn, checkOut) {
+            try {
+                // Using Booking.com API (simplified for demo)
+                const response = await fetch(`https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination?query=${destination}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': 'your-api-key-here', // Would need real API key
+                        'X-RapidAPI-Host': 'booking-com15.p.rapidapi.com'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.data || [];
+                }
+            } catch (error) {
+                console.log('API search failed, using mock data:', error);
+            }
+            
+            // Fallback to mock data with realistic booking URLs
+            return [
+                {
+                    name: `${destination} Dive Resort`,
+                    type: "Resort",
+                    rating: 4.5,
+                    price_per_night: Math.round(Math.random() * 150 + 100),
+                    amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
+                    image: "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                },
+                {
+                    name: `${destination} Beach Hotel`,
+                    type: "Hotel",
+                    rating: 4.0,
+                    price_per_night: Math.round(Math.random() * 100 + 80),
+                    amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
+                    image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                },
+                {
+                    name: `${destination} Guesthouse`,
+                    type: "Guesthouse",
+                    rating: 3.5,
+                    price_per_night: Math.round(Math.random() * 60 + 40),
+                    amenities: ["Kitchen", "WiFi", "Garden"],
+                    image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}`
+                }
+            ];
+        }
+        
+        async function searchFlights(departure, arrival, date) {
+            try {
+                // Using Skyscanner API (simplified for demo)
+                const response = await fetch(`https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browsequotes/v1.0/US/${departure}/USD/${arrival}/${date}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': 'your-api-key-here',
+                        'X-RapidAPI-Host': 'skyscanner-skyscanner-flight-search-v1.p.rapidapi.com'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.Quotes || [];
+                }
+            } catch (error) {
+                console.log('Flight API search failed, using mock data:', error);
+            }
+            
+            // Fallback to mock data with realistic booking URLs
+            return [
+                {
+                    airline: "Emirates",
+                    departure: departure,
+                    arrival: arrival,
+                    price: Math.round(Math.random() * 2000 + 800),
+                    duration: "12h 30m",
+                    stops: "1 stop",
+                    departureTime: "22:45",
+                    arrivalTime: "17:15+1",
+                    bookingUrl: `https://www.emirates.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                },
+                {
+                    airline: "Qatar Airways",
+                    departure: departure,
+                    arrival: arrival,
+                    price: Math.round(Math.random() * 2000 + 750),
+                    duration: "14h 15m",
+                    stops: "1 stop",
+                    departureTime: "09:30",
+                    arrivalTime: "08:45+1",
+                    bookingUrl: `https://www.qatarairways.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                },
+                {
+                    airline: "Singapore Airlines",
+                    departure: departure,
+                    arrival: arrival,
+                    price: Math.round(Math.random() * 2000 + 900),
+                    duration: "16h 20m",
+                    stops: "2 stops",
+                    departureTime: "15:20",
+                    arrivalTime: "14:40+2",
+                    bookingUrl: `https://www.singaporeair.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}`
+                }
+            ];
+        }
+        
+        async function searchDivingPackages(destination) {
+            try {
+                // Using PADI API or similar (simplified for demo)
+                const response = await fetch(`https://api.padi.com/courses?location=${encodeURIComponent(destination)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer your-api-key-here'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.courses || [];
+                }
+            } catch (error) {
+                console.log('Diving API search failed, using mock data:', error);
+            }
+            
+            // Fallback to mock data with realistic booking URLs
+            return [
+                {
+                    name: `${destination} Explorer Package`,
+                    dives: 5,
+                    duration: "3 days",
+                    price: Math.round(Math.random() * 300 + 200),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks"],
+                    certification: "Open Water Required",
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver?location=${encodeURIComponent(destination)}`
+                },
+                {
+                    name: `${destination} Adventure Package`,
+                    dives: 10,
+                    duration: "5 days",
+                    price: Math.round(Math.random() * 500 + 400),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
+                    certification: "Advanced Open Water",
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/advanced-open-water-diver?location=${encodeURIComponent(destination)}`
+                },
+                {
+                    name: `${destination} Pro Package`,
+                    dives: 15,
+                    duration: "7 days",
+                    price: Math.round(Math.random() * 700 + 600),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
+                    certification: "Rescue Diver",
+                    bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver?location=${encodeURIComponent(destination)}`
+                }
+            ];
+        }
         function updateDestination() {
             const destination = document.getElementById('tripDestination').value;
             console.log('🌍 Destination updated:', destination);
@@ -592,87 +753,60 @@
             }
         }
         
-        function updateFlightOptions() {
+        async function updateFlightOptions() {
             const departureCountry = document.getElementById('departureCountry').value;
             const departureCity = document.getElementById('departureCity').value;
             const destination = document.getElementById('tripDestination').value;
+            const startDate = document.getElementById('tripStartDate').value;
             const flightContainer = document.getElementById('flightOptions');
             
-            console.log('🛫 Updating flight options:', { departureCountry, departureCity, destination });
+            console.log('🛫 Updating flight options:', { departureCountry, departureCity, destination, startDate });
             
             if (!departureCountry || !departureCity || !destination) {
                 flightContainer.innerHTML = '<p class="text-gray-500">Select departure location and destination to see flight options</p>';
                 return;
             }
             
-            // Mock flight data based on routes
-            const flightOptions = [
-                {
-                    airline: "Emirates",
-                    departure: `${departureCity}, ${departureCountry}`,
-                    arrival: destination,
-                    price: Math.round(Math.random() * 2000 + 800),
-                    duration: "12h 30m",
-                    stops: "1 stop",
-                    departureTime: "22:45",
-                    arrivalTime: "17:15+1",
-                    bookingUrl: "https://www.emirates.com/book-flight/"
-                },
-                {
-                    airline: "Qatar Airways",
-                    departure: `${departureCity}, ${departureCountry}`,
-                    arrival: destination,
-                    price: Math.round(Math.random() * 2000 + 750),
-                    duration: "14h 15m",
-                    stops: "1 stop",
-                    departureTime: "09:30",
-                    arrivalTime: "08:45+1",
-                    bookingUrl: "https://www.qatarairways.com/book-flight/"
-                },
-                {
-                    airline: "Singapore Airlines",
-                    departure: `${departureCity}, ${departureCountry}`,
-                    arrival: destination,
-                    price: Math.round(Math.random() * 2000 + 900),
-                    duration: "16h 20m",
-                    stops: "2 stops",
-                    departureTime: "15:20",
-                    arrivalTime: "14:40+2",
-                    bookingUrl: "https://www.singaporeair.com/book-flight/"
-                }
-            ];
+            flightContainer.innerHTML = '<p class="text-gray-500">Loading flight options...</p>';
             
-            console.log('🛫 Flight options generated:', flightOptions.length);
-            
-            let html = '';
-            flightOptions.forEach((flight, index) => {
-                html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="font-semibold">${flight.airline}</div>
-                                <div class="text-sm text-gray-600">${flight.departure} → ${flight.arrival}</div>
-                                <div class="text-sm text-gray-500">${flight.departureTime} - ${flight.arrivalTime} (${flight.duration})</div>
+            try {
+                const flights = await searchFlights(`${departureCity}, ${departureCountry}`, destination, startDate);
+                
+                console.log('🛫 Flight options generated:', flights.length);
+                
+                let html = '';
+                flights.forEach((flight, index) => {
+                    html += `
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="font-semibold">${flight.airline}</div>
+                                    <div class="text-sm text-gray-600">${flight.departure} → ${flight.arrival}</div>
+                                    <div class="text-sm text-gray-500">${flight.departureTime} - ${flight.arrivalTime} (${flight.duration})</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-lg">$${flight.price}</div>
+                                    <div class="text-sm text-gray-500">${flight.stops}</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-bold text-lg">$${flight.price}</div>
-                                <div class="text-sm text-gray-500">${flight.stops}</div>
+                            <div class="mt-3 flex space-x-2">
+                                <button onclick="selectFlight(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                    Select
+                                </button>
+                                <a href="${flight.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                    Book Now
+                                </a>
                             </div>
                         </div>
-                        <div class="mt-3 flex space-x-2">
-                            <button onclick="selectFlight(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
-                                Select
-                            </button>
-                            <a href="${flight.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                                Book Now
-                            </a>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            flightContainer.innerHTML = html;
-            console.log('🛫 Flight options HTML updated');
+                    `;
+                });
+                
+                flightContainer.innerHTML = html;
+                console.log('🛫 Flight options HTML updated');
+            } catch (error) {
+                console.error('Error loading flights:', error);
+                flightContainer.innerHTML = '<p class="text-red-500">Error loading flight options</p>';
+            }
         }
         
         function updatePurchaseOptions() {
@@ -680,8 +814,10 @@
             updateDivingPackages();
         }
         
-        function updateAccommodationOptions() {
+        async function updateAccommodationOptions() {
             const destination = document.getElementById('tripDestination').value;
+            const startDate = document.getElementById('tripStartDate').value;
+            const endDate = document.getElementById('tripEndDate').value;
             const duration = parseInt(document.getElementById('tripDuration').value) || 7;
             const container = document.getElementById('accommodationOptions');
             
@@ -690,72 +826,51 @@
                 return;
             }
             
-            const accommodations = [
-                {
-                    name: `${destination} Dive Resort`,
-                    type: "Resort",
-                    rating: 4.5,
-                    price_per_night: Math.round(Math.random() * 150 + 100),
-                    amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
-                    image: "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=resort`
-                },
-                {
-                    name: `${destination} Beach Hotel`,
-                    type: "Hotel",
-                    rating: 4.0,
-                    price_per_night: Math.round(Math.random() * 100 + 80),
-                    amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
-                    image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=hotel`
-                },
-                {
-                    name: `${destination} Guesthouse`,
-                    type: "Guesthouse",
-                    rating: 3.5,
-                    price_per_night: Math.round(Math.random() * 60 + 40),
-                    amenities: ["Kitchen", "WiFi", "Garden"],
-                    image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=guesthouse`
-                }
-            ];
+            container.innerHTML = '<p class="text-gray-500">Loading accommodation options...</p>';
             
-            let html = '';
-            accommodations.forEach((acc, index) => {
-                const totalCost = acc.price_per_night * duration;
-                html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
-                        <div class="flex space-x-4">
-                            <img src="${acc.image}" alt="${acc.name}" class="w-20 h-20 rounded-lg object-cover" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop'">
-                            <div class="flex-1">
-                                <div class="font-semibold">${acc.name}</div>
-                                <div class="text-sm text-gray-600">${acc.type} • ⭐ ${acc.rating}</div>
-                                <div class="text-sm text-gray-500">${acc.amenities.join(" • ")}</div>
-                                <div class="text-sm font-semibold text-green-600">${duration} nights = $${totalCost} total</div>
+            try {
+                const accommodations = await searchAccommodations(destination, startDate, endDate);
+                
+                let html = '';
+                accommodations.forEach((acc, index) => {
+                    const totalCost = acc.price_per_night * duration;
+                    html += `
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
+                            <div class="flex space-x-4">
+                                <img src="${acc.image}" alt="${acc.name}" class="w-20 h-20 rounded-lg object-cover" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop'">
+                                <div class="flex-1">
+                                    <div class="font-semibold">${acc.name}</div>
+                                    <div class="text-sm text-gray-600">${acc.type} • ⭐ ${acc.rating}</div>
+                                    <div class="text-sm text-gray-500">${acc.amenities.join(" • ")}</div>
+                                    <div class="text-sm font-semibold text-green-600">${duration} nights = $${totalCost} total</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-lg">$${acc.price_per_night}</div>
+                                    <div class="text-sm text-gray-500">per night</div>
+                                    <div class="text-sm font-semibold text-green-600">$${totalCost}</div>
+                                    <div class="text-xs text-gray-500">total stay</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-bold text-lg">$${acc.price_per_night}</div>
-                                <div class="text-sm text-gray-500">per night</div>
-                                <div class="text-sm font-semibold text-green-600">$${totalCost}</div>
-                                <div class="text-xs text-gray-500">total stay</div>
+                            <div class="mt-3 flex space-x-2">
+                                <button onclick="selectAccommodation(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                    Select
+                                </button>
+                                <a href="${acc.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                    Book Now
+                                </a>
                             </div>
                         </div>
-                        <div class="mt-3 flex space-x-2">
-                            <button onclick="selectAccommodation(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
-                                Select
-                            </button>
-                            <a href="${acc.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                                Book Now
-                            </a>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading accommodations:', error);
+                container.innerHTML = '<p class="text-red-500">Error loading accommodation options</p>';
+            }
         }
         
-        function updateDivingPackages() {
+        async function updateDivingPackages() {
             const destination = document.getElementById('tripDestination').value;
             const container = document.getElementById('divingPackages');
             
@@ -764,65 +879,44 @@
                 return;
             }
             
-            const packages = [
-                {
-                    name: `${destination} Explorer Package`,
-                    dives: 5,
-                    duration: "3 days",
-                    price: Math.round(Math.random() * 300 + 200),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks"],
-                    certification: "Open Water Required",
-                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver"
-                },
-                {
-                    name: `${destination} Adventure Package`,
-                    dives: 10,
-                    duration: "5 days",
-                    price: Math.round(Math.random() * 500 + 400),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
-                    certification: "Advanced Open Water",
-                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/advanced-open-water-diver"
-                },
-                {
-                    name: `${destination} Pro Package`,
-                    dives: 15,
-                    duration: "7 days",
-                    price: Math.round(Math.random() * 700 + 600),
-                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
-                    certification: "Rescue Diver",
-                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver"
-                }
-            ];
+            container.innerHTML = '<p class="text-gray-500">Loading diving packages...</p>';
             
-            let html = '';
-            packages.forEach((pkg, index) => {
-                html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-semibold">${pkg.name}</div>
-                                <div class="text-sm text-gray-600">${pkg.dives} dives • ${pkg.duration}</div>
-                                <div class="text-sm text-gray-500">${pkg.includes.join(" • ")}</div>
-                                <div class="text-sm text-blue-600">${pkg.certification}</div>
+            try {
+                const packages = await searchDivingPackages(destination);
+                
+                let html = '';
+                packages.forEach((pkg, index) => {
+                    html += `
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-semibold">${pkg.name}</div>
+                                    <div class="text-sm text-gray-600">${pkg.dives} dives • ${pkg.duration}</div>
+                                    <div class="text-sm text-gray-500">${pkg.includes.join(" • ")}</div>
+                                    <div class="text-sm text-blue-600">${pkg.certification}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-lg">$${pkg.price}</div>
+                                    <div class="text-sm text-gray-500">total</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-bold text-lg">$${pkg.price}</div>
-                                <div class="text-sm text-gray-500">total</div>
+                            <div class="mt-3 flex space-x-2">
+                                <button onclick="selectDivingPackage(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                    Select
+                                </button>
+                                <a href="${pkg.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                    Book Now
+                                </a>
                             </div>
                         </div>
-                        <div class="mt-3 flex space-x-2">
-                            <button onclick="selectDivingPackage(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
-                                Select
-                            </button>
-                            <a href="${pkg.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                                Book Now
-                            </a>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading diving packages:', error);
+                container.innerHTML = '<p class="text-red-500">Error loading diving packages</p>';
+            }
         }
         
         function updateCompleteTripSummary() {
@@ -1282,6 +1376,9 @@
         window.selectFlight = selectFlight;
         window.selectAccommodation = selectAccommodation;
         window.selectDivingPackage = selectDivingPackage;
+        window.searchAccommodations = searchAccommodations;
+        window.searchFlights = searchFlights;
+        window.searchDivingPackages = searchDivingPackages;
         
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
