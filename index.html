@@ -1115,13 +1115,24 @@ async function updateFlightOptions() {
     const departureCountry = document.getElementById('departureCountry').value;
     const departureCity = document.getElementById('departureCity').value;
     const destination = document.getElementById('tripDestination').value;
-            })) || getMockDivingPackages(destination);
+    
+    console.log('🛫 Updating flight options:', { departureCountry, departureCity, destination });
+    
+    if (departureCity && destination && tripStartDate) {
+        try {
+            console.log('🛫 Searching flights...');
+            const flights = await searchFlights(`${departureCity}, ${departureCountry}`, destination, tripStartDate);
+            displayFlightOptions(flights);
+        } catch (error) {
+            console.error('❌ Flight search failed:', error);
         }
-        
-        // Helper functions
-        function getAirportCode(location) {
-            // Simple airport code mapping (would need comprehensive database)
-            const codes = {
+    }
+}
+
+// Helper functions
+function getAirportCode(location) {
+    // Simple airport code mapping (would need comprehensive database)
+    const codes = {
                 'New York': 'NYC',
                 'Los Angeles': 'LAX',
                 'London': 'LON',
@@ -1132,20 +1143,20 @@ async function updateFlightOptions() {
                 'Belize': 'BZE',
                 'Great Barrier Reef': 'CNS',
                 'Maldives': 'MLE',
-                'Red Sea': 'SSH'
-            };
-            return codes[location] || location;
-        }
-        
-        function formatDuration(minutes) {
-            const hours = Math.floor(minutes / 60);
-            const mins = minutes % 60;
-            return `${hours}h ${mins}m`;
-        }
-        
-        // Enhanced mock data functions (fallbacks)
-        function getMockAccommodations(destination, checkIn, checkOut) {
-            return [
+            'Red Sea': 'SSH'
+        };
+        return codes[location] || location;
+    }
+    
+    function formatDuration(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+    }
+    
+    // Enhanced mock data functions (fallbacks)
+    function getMockAccommodations(destination, checkIn, checkOut) {
+        return [
                 {
                     name: `${destination} Dive Resort & Spa`,
                     type: "Resort",
