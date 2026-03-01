@@ -94,6 +94,154 @@
             }
         }
         
+        // Search API Functions
+        async function searchPricing(location, durationDays = 7) {
+            try {
+                const response = await fetch(`${API_URL}/api/search/pricing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location, duration_days: durationDays })
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Pricing search failed');
+                }
+            } catch (error) {
+                console.log('Pricing search error:', error);
+                throw error;
+            }
+        }
+        
+        async function getPricingBreakdown(location, durationDays = 7) {
+            try {
+                const response = await fetch(`${API_URL}/api/search/pricing/breakdown`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location, duration_days: durationDays })
+                });
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Pricing breakdown failed');
+                }
+            } catch (error) {
+                console.log('Pricing breakdown error:', error);
+                throw error;
+            }
+        }
+        
+        async function getPopularLocations() {
+            try {
+                const response = await fetch(`${API_URL}/api/search/locations/popular`);
+                
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Failed to get popular locations');
+                }
+            } catch (error) {
+                console.log('Popular locations error:', error);
+                return { popular_locations: [] };
+            }
+        }
+        
+        // Currency Conversion Functions
+        async function getExchangeRates() {
+            try {
+                // Using a free exchange rate API
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Failed to fetch exchange rates');
+                }
+            } catch (error) {
+                console.log('Exchange rate error:', error);
+                // Fallback to common rates
+                return {
+                    rates: {
+                        'USD': 1.0,
+                        'EUR': 0.85,
+                        'GBP': 0.73,
+                        'JPY': 110.0,
+                        'AUD': 1.35,
+                        'CAD': 1.25,
+                        'CHF': 0.92,
+                        'CNY': 6.45,
+                        'INR': 74.0
+                    }
+                };
+            }
+        }
+        
+        let exchangeRates = null;
+        let userCurrency = 'USD';
+        
+        async function initializeCurrency() {
+            // Load user's preferred currency from profile or localStorage
+            userCurrency = localStorage.getItem('preferredCurrency') || 'USD';
+            
+            // Load exchange rates
+            exchangeRates = await getExchangeRates();
+            console.log('Exchange rates loaded:', exchangeRates);
+        }
+        
+        function convertPrice(priceInUSD, targetCurrency) {
+            if (!exchangeRates || targetCurrency === 'USD') {
+                return priceInUSD;
+            }
+            
+            const rate = exchangeRates.rates[targetCurrency];
+            if (rate) {
+                return priceInUSD * rate;
+            }
+            
+            return priceInUSD; // Fallback
+        }
+        
+        function formatCurrency(amount, currency) {
+            const convertedAmount = convertPrice(amount, currency);
+            
+            const currencySymbols = {
+                'USD': '$',
+                'EUR': '€',
+                'GBP': '£',
+                'JPY': '¥',
+                'AUD': 'A$',
+                'CAD': 'C$',
+                'CHF': 'CHF ',
+                'CNY': '¥',
+                'INR': '₹'
+            };
+            
+            const symbol = currencySymbols[currency] || '$';
+            
+            // Format based on currency
+            if (currency === 'JPY' || currency === 'CNY') {
+                return `${symbol}${Math.round(convertedAmount).toLocaleString()}`;
+            } else {
+                return `${symbol}${convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+            }
+        }
+        
+        async function updateUserCurrency(currency) {
+            userCurrency = currency;
+            localStorage.setItem('preferredCurrency', currency);
+            
+            // Update any displayed prices
+            updateDisplayedPrices();
+        }
+        
+        function updateDisplayedPrices() {
+            // This will be called to update all price displays
+            console.log('Updating prices for currency:', userCurrency);
+        }
+        
         async function loginUser(credentials) {
             try {
                 const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -160,7 +308,32 @@
             };
         }
         
-        // Trip Management
+        // Trip Management with localStorage persistence
+        function loadSavedTrips() {
+            try {
+                const stored = localStorage.getItem('savedTrips');
+                if (stored) {
+                    savedTrips = JSON.parse(stored);
+                    console.log('📁 Loaded', savedTrips.length, 'trips from localStorage');
+                } else {
+                    savedTrips = [];
+                    console.log('📁 No saved trips found, starting fresh');
+                }
+            } catch (error) {
+                console.error('❌ Error loading saved trips:', error);
+                savedTrips = [];
+            }
+        }
+        
+        function saveTripsToStorage() {
+            try {
+                localStorage.setItem('savedTrips', JSON.stringify(savedTrips));
+                console.log('💾 Saved', savedTrips.length, 'trips to localStorage');
+            } catch (error) {
+                console.error('❌ Error saving trips to storage:', error);
+            }
+        }
+        
         async function saveTrip(tripData) {
             try {
                 const response = await fetch(`${API_URL}/api/trips/`, {
@@ -170,22 +343,32 @@
                 });
                 
                 if (response.ok) {
-                    return await response.json();
+                    const savedTrip = await response.json();
+                    savedTrips.push(savedTrip);
+                    saveTripsToStorage(); // Save to localStorage
+                    return savedTrip;
                 } else {
-                    throw new Error('Failed to save trip');
+                    // Fallback to localStorage if backend fails
+                    const localTrip = {
+                        ...tripData,
+                        id: Date.now().toString(),
+                        created_at: new Date().toISOString()
+                    };
+                    savedTrips.push(localTrip);
+                    saveTripsToStorage();
+                    return localTrip;
                 }
             } catch (error) {
-                console.log('Trip save error:', error);
-                // Fallback to demo mode
-                const demoTrip = {
-                    id: savedTrips.length + 1,
+                console.log('Save trip error:', error);
+                // Fallback to localStorage
+                const localTrip = {
                     ...tripData,
-                    total_cost_estimate: 1500,
-                    status: 'planned',
+                    id: Date.now().toString(),
                     created_at: new Date().toISOString()
                 };
-                savedTrips.push(demoTrip);
-                return demoTrip;
+                savedTrips.push(localTrip);
+                saveTripsToStorage();
+                return localTrip;
             }
         }
         
@@ -223,7 +406,16 @@
         
         function deleteTrip(tripId) {
             if (confirm('Are you sure you want to delete this trip?')) {
+                // Remove from local array
                 savedTrips = savedTrips.filter(trip => trip.id !== tripId);
+                
+                // Save to localStorage
+                saveTripsToStorage();
+                
+                // Try to delete from backend too (but don't fail if it doesn't work)
+                fetch(`${API_URL}/api/trips/${tripId}`, { method: 'DELETE' })
+                    .catch(error => console.log('Backend delete failed, but localStorage updated'));
+                
                 renderApp();
             }
         }
@@ -248,12 +440,226 @@
         window.showAddDiveSiteModal = showAddDiveSiteModal;
         window.closeAddDiveSiteModal = closeAddDiveSiteModal;
         window.addNewDiveSite = addNewDiveSite;
+        window.searchTripPricing = searchTripPricing;
+        window.testAlert = testAlert;
+        
+        function testAlert() {
+            alert('🎉 JavaScript is working! If you see this, the script is loaded and functions are accessible.');
+            console.log('✅ testAlert() called successfully');
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('testKey', 'testValue');
+                const stored = localStorage.getItem('testKey');
+                alert('💾 LocalStorage test: ' + stored);
+                console.log('💾 LocalStorage working:', stored);
+            } catch (e) {
+                alert('❌ LocalStorage error: ' + e.message);
+                console.error('❌ LocalStorage failed:', e);
+            }
+            
+            // Test currency system
+            try {
+                alert('💱 Currency system test: ' + (typeof userCurrency !== 'undefined' ? userCurrency : 'not defined'));
+                console.log('💱 User currency:', userCurrency);
+            } catch (e) {
+                alert('❌ Currency system error: ' + e.message);
+                console.error('❌ Currency system failed:', e);
+            }
+        }
         
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
             console.log('Dives:', dives.length);
             console.log('Flight time:', flightTime);
             
+            if (dives.length === 0 || !flightTime) {
+                alert('Please add dives and set flight time before saving');
+                return;
+            }
+            
+            const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
+            const tripDescription = document.getElementById('tripDescription')?.value || `Dive trip with ${dives.length} dives`;
+            
+            console.log('Trip name:', tripName);
+            console.log('Trip description:', tripDescription);
+            
+            const tripData = {
+                name: tripName,
+                description: tripDescription,
+                dives: dives,
+                flightTime: flightTime,
+                created_at: new Date().toISOString()
+            };
+            
+            // Save trip using the enhanced saveTrip function
+            saveTrip(tripData).then(savedTrip => {
+                console.log('✅ Trip saved successfully:', savedTrip);
+                alert('Trip saved successfully!');
+                
+                // Clear current trip state
+                currentTripName = '';
+                currentTripId = null;
+                dives = [];
+                flightTime = '';
+                
+                navigate('my-trips');
+            }).catch(error => {
+                console.error('❌ Error saving trip:', error);
+                alert('Error saving trip: ' + error.message);
+            });
+        }
+        
+        // Pricing Search Functions
+        async function searchTripPricing() {
+            alert('🔍 searchTripPricing() called! This confirms the function is executing.');
+            console.log('🔍 searchTripPricing() called');
+            
+            const location = document.getElementById('pricingLocation').value;
+            const duration = parseInt(document.getElementById('pricingDuration').value);
+            
+            console.log('📍 Location:', location);
+            console.log('⏱️ Duration:', duration);
+            
+            if (!location) {
+                alert('Please select a destination');
+                return;
+            }
+            
+            alert('📍 Starting search for: ' + location + ' (' + duration + ' days)');
+            console.log('📡 Starting pricing search...');
+            
+            const resultsDiv = document.getElementById('pricingResults');
+            if (!resultsDiv) {
+                alert('❌ ERROR: pricingResults element not found!');
+                console.error('❌ pricingResults element not found');
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<p class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="text-gray-600 mt-2">Searching realistic pricing...</p></div>';
+            resultsDiv.classList.remove('hidden');
+            
+            try {
+                alert('📡 About to call getPricingBreakdown...');
+                console.log('📡 Calling getPricingBreakdown...');
+                const pricingData = await getPricingBreakdown(location, duration);
+                alert('📦 Received pricing data! Check console for details.');
+                console.log('📦 Received pricing data:', pricingData);
+                console.log('📦 Data type:', typeof pricingData);
+                console.log('📦 Data keys:', Object.keys(pricingData));
+                
+                displayPricingResults(pricingData);
+            } catch (error) {
+                alert('❌ ERROR: ' + error.message);
+                console.error('❌ Pricing search failed:', error);
+                resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-800">Failed to fetch pricing data. Please try again.</p><p class="text-red-600 text-sm">Error: ' + error.message + '</p></div>';
+            }
+        }
+        
+        function displayPricingResults(pricingData) {
+            alert('🎨 displayPricingResults() called! This confirms the display function is executing.');
+            console.log('🎨 displayPricingResults called with:', pricingData);
+            console.log('🎨 Data type:', typeof pricingData);
+            
+            const resultsDiv = document.getElementById('pricingResults');
+            if (!resultsDiv) {
+                alert('❌ ERROR: pricingResults element not found in display function!');
+                console.error('❌ pricingResults element not found in display function');
+                return;
+            }
+            
+            if (!pricingData) {
+                alert('❌ ERROR: No pricing data received!');
+                console.error('❌ No pricing data received');
+                resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing data received</p></div>';
+                return;
+            }
+            
+            const pricing = pricingData.pricing;
+            console.log('💰 Pricing object:', pricing);
+            console.log('💰 Pricing type:', typeof pricing);
+            
+            if (!pricing) {
+                alert('❌ ERROR: No pricing object in data!');
+                console.error('❌ No pricing object in data');
+                resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing information available</p></div>';
+                return;
+            }
+            
+            console.log('💰 Pricing keys:', Object.keys(pricing));
+            console.log('💰 Has components:', 'components' in pricing);
+            console.log('💰 Components data:', pricing.components);
+            
+            alert('💰 About to generate HTML with ' + Object.keys(pricing).length + ' pricing fields');
+            
+            // Simple HTML without complex template literals
+            let html = '<div class="space-y-4">';
+            
+            // Basic pricing info
+            html += '<div class="bg-green-50 border border-green-200 rounded-lg p-4">';
+            html += '<h3 class="font-semibold text-green-800">Pricing for ' + pricingData.location + '</h3>';
+            html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Average</p><p class="text-xl font-bold text-green-700">$' + pricing.average_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Budget</p><p class="text-xl font-bold text-blue-700">$' + pricing.budget_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Luxury</p><p class="text-xl font-bold text-purple-700">$' + pricing.luxury_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Per Day</p><p class="text-xl font-bold text-gray-700">$' + pricing.price_per_day + '</p></div>';
+            html += '</div></div>';
+            
+            // Components breakdown
+            if (pricing.components) {
+                alert('🏗️ Found ' + Object.keys(pricing.components).length + ' components! Adding to display...');
+                console.log('🏗️ Adding components breakdown...');
+                html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">';
+                html += '<h4 class="font-semibold text-blue-800 mb-3">Cost Breakdown</h4>';
+                
+                const componentEntries = Object.entries(pricing.components);
+                console.log('📦 Component entries:', componentEntries);
+                console.log('📦 Component count:', componentEntries.length);
+                
+                componentEntries.forEach(([component, data]) => {
+                    const componentName = component.charAt(0).toUpperCase() + component.slice(1);
+                    const icon = getComponentIcon(component);
+                    console.log('📦 Adding component:', componentName, data);
+                    
+                    html += '<div class="flex justify-between items-center p-2 bg-white rounded-lg mb-2">';
+                    html += '<div class="flex items-center space-x-3">';
+                    html += '<span>' + icon + '</span>';
+                    html += '<span class="text-gray-700 font-medium">' + componentName + '</span>';
+                    html += '<span class="text-xs text-gray-500">' + data.percentage + '% of total</span>';
+                    html += '</div>';
+                    html += '<span class="text-sm font-bold text-blue-700">$' + data.estimated_cost + '</span>';
+                    html += '</div>';
+                });
+                
+                html += '</div>';
+            } else {
+                alert('❌ No components found in pricing data!');
+                console.log('❌ No components found');
+                html += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">';
+                html += '<p class="text-yellow-800">No detailed breakdown available</p>';
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            alert('🎨 About to set HTML content...');
+            console.log('🎨 Setting HTML...');
+            console.log('🎨 HTML length:', html.length);
+            resultsDiv.innerHTML = html;
+            alert('✅ HTML set successfully! Check the page for results.');
+            console.log('✅ displayPricingResults completed');
+        }
+        
+        function getComponentIcon(component) {
+            const icons = {
+                'accommodation': '🏨',
+                'diving': '🤿',
+                'meals': '🍽️',
+                'transportation': '✈️',
+                'equipment': '🎒'
+            };
+            return icons[component] || '📋';
+        }    
             if (dives.length === 0 || !flightTime) {
                 alert('Please add dives and set flight time before saving');
                 return;
@@ -502,6 +908,9 @@
         
         // Rendering Functions
         function renderApp() {
+            console.log('🎨 renderApp() called');
+            alert('🎨 APP RENDERING: The renderApp() function is being called!');
+            
             const app = document.getElementById('app');
             
             if (!currentUser) {
@@ -875,6 +1284,44 @@
                             </div>
                         </div>
                         
+                        <!-- Pricing Search Section -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <h2 class="text-xl font-semibold mb-4">Trip Pricing</h2>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                                        <select id="pricingLocation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Select destination...</option>
+                                            <option value="Belize">Belize</option>
+                                            <option value="Red Sea">Red Sea</option>
+                                            <option value="Great Barrier Reef">Great Barrier Reef</option>
+                                            <option value="Maldives">Maldives</option>
+                                            <option value="Caribbean">Caribbean</option>
+                                            <option value="Thailand">Thailand</option>
+                                            <option value="Indonesia">Indonesia</option>
+                                            <option value="Philippines">Philippines</option>
+                                            <option value="Hawaii">Hawaii</option>
+                                            <option value="Florida">Florida</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration (days)</label>
+                                        <input type="number" id="pricingDuration" min="1" max="30" value="7" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <button onclick="searchTripPricing()" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
+                                    <i class="fas fa-search mr-2"></i>Search Realistic Pricing
+                                </button>
+                                <button onclick="testAlert()" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium mt-2">
+                                    <i class="fas fa-test mr-2"></i>Test JavaScript (Click Me)
+                                </button>
+                                <div id="pricingResults" class="hidden">
+                                    <!-- Pricing results will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div class="lg:col-span-2">
                                 <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -1066,6 +1513,22 @@
                                                 <option value="Divemaster" ${userData.certification_level === 'Divemaster' ? 'selected' : ''}>Divemaster</option>
                                                 <option value="Instructor" ${userData.certification_level === 'Instructor' ? 'selected' : ''}>Instructor</option>
                                             </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Preferred Currency</label>
+                                            <select id="profileCurrency" name="currency" onchange="updateUserCurrency(this.value)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                <option value="USD" ${userCurrency === 'USD' ? 'selected' : ''}>USD - US Dollar ($)</option>
+                                                <option value="EUR" ${userCurrency === 'EUR' ? 'selected' : ''}>EUR - Euro (€)</option>
+                                                <option value="GBP" ${userCurrency === 'GBP' ? 'selected' : ''}>GBP - British Pound (£)</option>
+                                                <option value="JPY" ${userCurrency === 'JPY' ? 'selected' : ''}>JPY - Japanese Yen (¥)</option>
+                                                <option value="AUD" ${userCurrency === 'AUD' ? 'selected' : ''}>AUD - Australian Dollar (A$)</option>
+                                                <option value="CAD" ${userCurrency === 'CAD' ? 'selected' : ''}>CAD - Canadian Dollar (C$)</option>
+                                                <option value="CHF" ${userCurrency === 'CHF' ? 'selected' : ''}>CHF - Swiss Franc (CHF)</option>
+                                                <option value="CNY" ${userCurrency === 'CNY' ? 'selected' : ''}>CNY - Chinese Yuan (¥)</option>
+                                                <option value="INR" ${userCurrency === 'INR' ? 'selected' : ''}>INR - Indian Rupee (₹)</option>
+                                            </select>
+                                            <p class="text-xs text-gray-500 mt-1">Prices will be displayed in your preferred currency</p>
                                         </div>
                                     </div>
                                     
@@ -1261,7 +1724,27 @@
         
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function() {
-            renderApp();
+            console.log('🚀 Application starting...');
+            
+            // Immediate test to confirm JavaScript is working
+            setTimeout(() => {
+                alert('🧪 PAGE LOADED: JavaScript is working! If you see this, the app loaded successfully.');
+                console.log('✅ Page load test alert completed');
+            }, 2000);
+            
+            // Load saved trips from localStorage first
+            loadSavedTrips();
+            
+            // Initialize currency system with fallback
+            initializeCurrency().then(() => {
+                console.log('💱 Currency system initialized');
+                console.log('🌍 User currency:', userCurrency);
+                renderApp();
+            }).catch(error => {
+                console.error('❌ Currency initialization failed:', error);
+                // Still render the app even if currency fails
+                renderApp();
+            });
         });
     </script>
 </body>

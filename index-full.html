@@ -908,6 +908,9 @@
         
         // Rendering Functions
         function renderApp() {
+            console.log('🎨 renderApp() called');
+            alert('🎨 APP RENDERING: The renderApp() function is being called!');
+            
             const app = document.getElementById('app');
             
             if (!currentUser) {
@@ -1722,6 +1725,12 @@
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Application starting...');
+            
+            // Immediate test to confirm JavaScript is working
+            setTimeout(() => {
+                alert('🧪 PAGE LOADED: JavaScript is working! If you see this, the app loaded successfully.');
+                console.log('✅ Page load test alert completed');
+            }, 2000);
             
             // Load saved trips from localStorage first
             loadSavedTrips();
