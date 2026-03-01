@@ -874,8 +874,8 @@
             
             try {
                 console.log('🏨 Making real API call to Booking COM...');
-                // Use the primary API (Booking COM by DataCrawler)
-                const response = await fetch(`${API_CONFIG.primary.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}`, {
+                // Use the primary API (Booking COM by DataCrawler) - correct endpoint
+                const response = await fetch(`${API_CONFIG.primary.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}&checkin=${checkIn}&checkout=${checkOut}`, {
                     method: 'GET',
                     headers: API_CONFIG.primary.headers
                 });
@@ -910,8 +910,9 @@
             
             try {
                 console.log('🛫 Making real API call to Booking COM (flights)...');
-                // Try primary API first (Booking COM includes flights)
-                const response = await fetch(`${API_CONFIG.primary.baseUrl}/flights/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&date=${date}`, {
+                // Booking COM API may not have flights, try alternative approach
+                // Use a general search endpoint that might include flights
+                const response = await fetch(`${API_CONFIG.primary.baseUrl}/flights/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&depart_date=${date}`, {
                     method: 'GET',
                     headers: API_CONFIG.primary.headers
                 });
@@ -925,12 +926,39 @@
                 } else {
                     const errorText = await response.text();
                     console.error('🛫 API Error Response:', errorText);
+                    // If flights endpoint doesn't exist, try Kiwi API
+                    if (API_CONFIG.alternatives.kiwi.headers['X-RapidAPI-Key'] !== 'demo-key-for-testing') {
+                        console.log('🛫 Trying Kiwi API as fallback...');
+                        return await searchFlightsKiwi(departure, arrival, date);
+                    }
                     throw new Error(`API returned ${response.status}: ${errorText}`);
                 }
             } catch (error) {
                 console.error('🛫 API search failed, using mock data:', error);
                 console.log('🛫 Falling back to mock data due to error');
                 return getMockFlights(departure, arrival, date);
+            }
+        }
+        
+        // Fallback flight search using Kiwi API
+        async function searchFlightsKiwi(departure, arrival, date) {
+            console.log('🛫 Using Kiwi API for flights...');
+            try {
+                const response = await fetch(`${API_CONFIG.alternatives.kiwi.baseUrl}/search?fly_from=${encodeURIComponent(departure)}&fly_to=${encodeURIComponent(arrival)}&date_from=${date}&date_to=${date}`, {
+                    method: 'GET',
+                    headers: API_CONFIG.alternatives.kiwi.headers
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🛫 Kiwi API response:', data);
+                    return transformKiwiFlightData(data, departure, arrival, date);
+                } else {
+                    throw new Error(`Kiwi API returned ${response.status}`);
+                }
+            } catch (error) {
+                console.error('🛫 Kiwi API failed:', error);
+                throw error;
             }
         }
         
@@ -975,7 +1003,7 @@
             return apiData.data?.map(hotel => ({
                 name: hotel.name || `${destination} Hotel`,
                 type: hotel.type || "Hotel",
-                rating: hotel.review_score || 4.0,
+                rating: hotel.rating || 4.0,
                 price_per_night: hotel.price || Math.round(Math.random() * 150 + 100),
                 amenities: hotel.amenities || ["WiFi", "Restaurant"],
                 image: hotel.photo_url || "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
@@ -984,13 +1012,11 @@
         }
         
         function transformFlightData(apiData, departure, arrival, date) {
-            // Transform real Skyscanner API data to our format
-            return apiData.Quotes?.map(quote => ({
-                airline: quote.OutboundLeg?.Carrier?.Name || "Unknown Airline",
-                departure: departure,
-                arrival: arrival,
-                price: quote.MinPrice || Math.round(Math.random() * 2000 + 800),
-                duration: formatDuration(quote.OutboundLeg?.Duration),
+            // Transform real flight API data to our format
+            return apiData.data?.map(quote => ({
+                airline: quote.Carrier || "Unknown Airline",
+                flightNumber: quote.OutboundLeg?.Carrier?.MarketingAirline?.FlightNumber || "Unknown",
+                price: quote.MinPrice || Math.round(Math.random() * 1000 + 500),
                 stops: quote.OutboundLeg?.Stops?.length || 0,
                 departureTime: quote.OutboundLeg?.DepartureTime?.split('T')[1]?.substring(0, 5) || "12:00",
                 arrivalTime: quote.OutboundLeg?.ArrivalTime?.split('T')[1]?.substring(0, 5) || "18:00",
@@ -998,16 +1024,97 @@
             })) || getMockFlights(departure, arrival, date);
         }
         
+        function transformKiwiFlightData(apiData, departure, arrival, date) {
+            // Transform Kiwi API data to our format
+            return apiData.data?.map(flight => ({
+                airline: flight.airlines || "Unknown Airline",
+                flightNumber: flight.id || "Unknown",
+                price: flight.price || Math.round(Math.random() * 1000 + 500),
+                stops: flight.stops || 0,
+                departureTime: flight.dTime || "12:00",
+                arrivalTime: flight.aTime || "18:00",
+                bookingUrl: flight.deep_link || `https://www.skyscanner.net/transport/flights/${getAirportCode(departure)}/${getAirportCode(arrival)}/${date}?adults=1`
+            })) || getMockFlights(departure, arrival, date);
+        }
+        
         function transformPadiData(apiData, destination) {
             // Transform real PADI API data to our format
-            return apiData.courses?.map(course => ({
+            return apiData.data?.map(course => ({
                 name: course.name || `${destination} Diving Course`,
-                dives: course.dives || 5,
+                provider: course.provider || "PADI Dive Center",
                 duration: course.duration || "3 days",
                 price: course.price || Math.round(Math.random() * 300 + 200),
                 includes: course.includes || ["Equipment", "Guide"],
                 certification: course.certification_level || "Open Water",
                 bookingUrl: course.booking_url || `https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver?location=${encodeURIComponent(destination)}`
+            })) || getMockDivingPackages(destination);
+        }
+        
+        function updateDestination() {
+            const destination = document.getElementById('tripDestination').value;
+            console.log('🌍 Destination updated:', destination);
+
+            if (destination) {
+                // Filter dive sites based on destination
+                const filteredSites = diveSites.filter(site => site.location === destination);
+                displayDiveSites(filteredSites);
+
+                // Auto-calculate duration if dates are set
+                updateTripDates();
+
+                // Update purchase options
+                updatePurchaseOptions();
+
+                // Update complete summary
+                updateCompleteTripSummary();
+            } else {
+                // Clear dive sites
+                document.getElementById('diveSitesContainer').innerHTML = '<p class="text-gray-500 col-span-full">Select a destination first to see available dive sites</p>';
+            }
+}
+
+function updateDepartureCities() {
+    const country = document.getElementById('departureCountry').value;
+    const citySelect = document.getElementById('departureCity');
+
+    console.log('🏙️ Updating departure cities for country:', country);
+
+    const cities = {
+        'US': ['New York', 'Los Angeles', 'Chicago', 'Miami', 'San Francisco', 'Seattle', 'Boston', 'Denver'],
+        'UK': ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Edinburgh', 'Liverpool', 'Bristol'],
+        'Canada': ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Edmonton', 'Quebec City'],
+        'Australia': ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Canberra', 'Gold Coast'],
+        'New Zealand': ['Auckland', 'Wellington', 'Christchurch', 'Queenstown', 'Dunedin', 'Hamilton'],
+        'Germany': ['Berlin', 'Munich', 'Frankfurt', 'Hamburg', 'Cologne', 'Düsseldorf'],
+        'France': ['Paris', 'Lyon', 'Marseille', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg'],
+        'Japan': ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Nagoya', 'Sapporo', 'Fukuoka'],
+        'Singapore': ['Singapore']
+    };
+
+    citySelect.innerHTML = '<option value="">Select city...</option>';
+
+    if (country && cities[country]) {
+        cities[country].forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+        });
+
+        console.log('🏙️ Cities loaded for country:', country, 'Count:', cities[country].length);
+
+        // Trigger flight options update
+        setTimeout(() => updateFlightOptions(), 100);
+    } else {
+        citySelect.innerHTML = '<option value="">Select country first...</option>';
+        console.log('🏙️ No cities for country:', country);
+    }
+}
+
+async function updateFlightOptions() {
+    const departureCountry = document.getElementById('departureCountry').value;
+    const departureCity = document.getElementById('departureCity').value;
+    const destination = document.getElementById('tripDestination').value;
             })) || getMockDivingPackages(destination);
         }
         
