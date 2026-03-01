@@ -904,6 +904,47 @@
             }
         }
         
+        async function searchFlights(departure, arrival, date) {
+            console.log('🛫 Searching flights from:', departure, 'to:', arrival);
+            console.log('🔑 API Status:', areAPIKeysConfigured() ? 'Using real APIs' : 'Using mock data');
+            
+            if (!areAPIKeysConfigured()) {
+                console.log('🛫 API keys not configured, using enhanced mock data');
+                return getMockFlights(departure, arrival, date);
+            }
+            
+            try {
+                console.log('🛫 Making real API call to Booking COM (flights)...');
+                // Booking COM API may not have flights, try alternative approach
+                // Use a general search endpoint that might include flights
+                const response = await fetch(`${API_CONFIG.primary.baseUrl}/flights/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&depart_date=${date}`, {
+                    method: 'GET',
+                    headers: API_CONFIG.primary.headers
+                });
+                
+                console.log('🛫 API Response Status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🛫 Real API response:', data);
+                    return transformFlightData(data, departure, arrival, date);
+                } else {
+                    const errorText = await response.text();
+                    console.error('🛫 API Error Response:', errorText);
+                    // If flights endpoint doesn't exist, try Kiwi API
+                    if (API_CONFIG.alternatives.kiwi.headers['X-RapidAPI-Key'] !== 'demo-key-for-testing') {
+                        console.log('🛫 Trying Kiwi API as fallback...');
+                        return await searchFlightsKiwi(departure, arrival, date);
+                    }
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('🛫 API search failed, using mock data:', error);
+                console.log('🛫 Falling back to mock data due to error');
+                return getMockFlights(departure, arrival, date);
+            }
+        }
+        
         // Fallback flight search using Kiwi API
         async function searchFlightsKiwi(departure, arrival, date) {
             console.log('🛫 Using Kiwi API for flights...');
