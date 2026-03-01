@@ -370,6 +370,7 @@
                 if (stored) {
                     savedTrips = JSON.parse(stored);
                     console.log('📁 Loaded', savedTrips.length, 'trips from localStorage');
+                    console.log('📋 Trip IDs:', savedTrips.map(t => ({ id: t.id, name: t.name })));
                 } else {
                     savedTrips = [];
                     console.log('📁 No saved trips found, starting fresh');
@@ -476,6 +477,9 @@
         }
         
         function editTrip(tripId) {
+            console.log('📝 Attempting to edit trip with ID:', tripId);
+            console.log('📋 Available trips:', savedTrips.map(t => ({ id: t.id, name: t.name })));
+            
             const trip = savedTrips.find(t => t.id === tripId);
             if (trip) {
                 console.log('📝 Editing trip:', trip);
@@ -521,6 +525,8 @@
                 renderApp();
             } else {
                 console.error('❌ Trip not found:', tripId);
+                console.error('❌ Available trip IDs:', savedTrips.map(t => t.id));
+                alert('Trip not found. The trip may have been deleted or there may be a data issue.');
             }
         }
         
