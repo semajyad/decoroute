@@ -99,11 +99,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate, db: Session = Depends(get_db)):
-    # Hash password first
-    hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
-    
     # Try database operations
     try:
+        # Hash password first
+        hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
+        
         # Check if user already exists (if database works)
         existing_user = db.query(User).filter(
             (User.email == user.email) | (User.username == user.username)
@@ -136,6 +136,8 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"Database error: {e}")
         # Fallback to demo mode - create user without database
+        # Hash password again since it might not have been done
+        hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
         import random
         demo_user = User(
             id=random.randint(1000, 9999),
