@@ -1955,8 +1955,19 @@ function getAirportCode(location) {
         window.updateAPIKeys = updateAPIKeys;
         window.loadAPIKeys = loadAPIKeys;
         window.testAPIKeys = testAPIKeys;
+        window.debugFunctionDefinitions = debugFunctionDefinitions;
         window.refreshAPIConfig = refreshAPIConfig;
         
+        // Debug function to check if functions are defined
+        function debugFunctionDefinitions() {
+            console.log('🔍 Debugging function definitions...');
+            console.log('searchFlightsKiwi defined:', typeof searchFlightsKiwi === 'function');
+            console.log('searchAccommodations defined:', typeof searchAccommodations === 'function');
+            console.log('searchDivingPackages defined:', typeof searchDivingPackages === 'function');
+            console.log('All functions should be defined above this line');
+        }
+        
+        // Initialize Application 
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
             console.log('Dives:', dives.length);
