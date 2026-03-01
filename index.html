@@ -458,12 +458,46 @@
             console.log('Trip name:', tripName);
             console.log('Trip description:', tripDescription);
             
+            // Get destination from first dive site
+            const destination = dives.length > 0 ? dives[0].site.location : 'Unknown';
+            
             const tripData = {
                 name: tripName,
                 description: tripDescription,
+                destination: destination,
                 dives: dives,
                 flightTime: flightTime,
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                // Add pricing information
+                pricing: {
+                    average_price: 1500 + (dives.length * 200),
+                    budget_price: 1000 + (dives.length * 150),
+                    luxury_price: 2000 + (dives.length * 300),
+                    price_per_day: Math.round((1500 + (dives.length * 200)) / 7),
+                    components: {
+                        accommodation: {
+                            percentage: 35,
+                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.35)
+                        },
+                        diving: {
+                            percentage: 25,
+                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.25)
+                        },
+                        meals: {
+                            percentage: 20,
+                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.20)
+                        },
+                        transportation: {
+                            percentage: 15,
+                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.15)
+                        },
+                        equipment: {
+                            percentage: 5,
+                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.05)
+                        }
+                    }
+                },
+                total_cost_estimate: 1500 + (dives.length * 200)
             };
             
             // Save trip using the enhanced saveTrip function
@@ -1380,10 +1414,24 @@
                                     <h3 class="text-xl font-semibold mb-2">${trip.name}</h3>
                                     <p class="text-gray-600 mb-4">${trip.description}</p>
                                     <div class="space-y-2 text-sm">
-                                        <p><i class="fas fa-calendar mr-2"></i>${new Date(trip.start_date).toLocaleDateString()}</p>
-                                        <p><i class="fas fa-plane mr-2"></i>${new Date(trip.end_date).toLocaleDateString()}</p>
-                                        <p><i class="fas fa-dollar-sign mr-2"></i>${trip.total_cost_estimate || 1500}</p>
+                                        <p><i class="fas fa-map-marker-alt mr-2"></i>${trip.destination || 'Unknown'}</p>
+                                        <p><i class="fas fa-calendar mr-2"></i>${new Date(trip.created_at).toLocaleDateString()}</p>
+                                        <p><i class="fas fa-dollar-sign mr-2"></i>$${trip.total_cost_estimate || 1500}</p>
+                                        ${trip.pricing ? `<p><i class="fas fa-chart-pie mr-2"></i>${trip.pricing.components?.accommodation?.percentage || 0}% Accommodation</p>` : ''}
                                     </div>
+                                    ${trip.pricing ? `
+                                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                                            <h4 class="font-semibold text-sm mb-2">Cost Breakdown</h4>
+                                            <div class="space-y-1 text-xs">
+                                                ${trip.pricing.components ? Object.entries(trip.pricing.components).map(([component, data]) => `
+                                                    <div class="flex justify-between">
+                                                        <span>${component.charAt(0).toUpperCase() + component.slice(1)}</span>
+                                                        <span class="font-semibold">$${data.estimated_cost}</span>
+                                                    </div>
+                                                `).join('') : ''}
+                                            </div>
+                                        </div>
+                                    ` : ''}
                                     <div class="mt-4 flex space-x-2">
                                         <button onclick="editTrip(${trip.id})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                                             <i class="fas fa-edit mr-1"></i>Edit
