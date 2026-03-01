@@ -878,58 +878,6 @@
             return icons[component] || '📋';
         }
         
-        function saveCurrentTrip() {
-            console.log('💾 Saving trip...');
-            console.log('Dives:', dives.length);
-            console.log('Flight time:', flightTime);
-            
-            if (dives.length === 0 || !flightTime) {
-                alert('Please add dives and set flight time before saving');
-                return;
-            }
-            
-            const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
-            const tripDescription = document.getElementById('tripDescription')?.value || `Dive trip with ${dives.length} dives`;
-            
-            console.log('Trip name:', tripName);
-            console.log('Trip description:', tripDescription);
-            
-            const tripData = {
-                name: tripName,
-                description: tripDescription,
-                dives: dives,
-                flightTime: flightTime,
-                start_date: dives[0].dive_datetime,
-                end_date: flightTime,
-                total_cost_estimate: 1500 + (dives.length * 200),
-                created_at: new Date().toISOString()
-            };
-            
-            if (currentTripId) {
-                // Update existing trip
-                const tripIndex = savedTrips.findIndex(t => t.id === currentTripId);
-                if (tripIndex !== -1) {
-                    savedTrips[tripIndex] = { ...tripData, id: currentTripId };
-                    alert('Trip updated successfully!');
-                }
-            } else {
-                // Create new trip
-                tripData.id = Date.now();
-                savedTrips.push(tripData);
-                console.log('Trip saved with ID:', tripData.id);
-                console.log('Total saved trips:', savedTrips.length);
-                alert('Trip saved successfully!');
-            }
-            
-            // Clear current trip state
-            currentTripName = '';
-            currentTripId = null;
-            dives = [];
-            flightTime = '';
-            
-            navigate('my-trips');
-        }
-        
         // Navigation
         function navigate(page) {
             console.log(`🧭 Navigating to: ${page}`);
