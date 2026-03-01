@@ -15,3 +15,5 @@ auth-test-*.png
 test-failure-*.png
 bandit-report.json
 safety-report.json
+docker-compose.yml
+frontend/
