@@ -458,6 +458,8 @@
                 return;
             }
             
+            console.log('🔍 Starting pricing search for:', location, duration);
+            
             const resultsDiv = document.getElementById('pricingResults');
             resultsDiv.innerHTML = `
                 <div class="text-center py-4">
@@ -468,19 +470,27 @@
             resultsDiv.classList.remove('hidden');
             
             try {
+                console.log('📡 Calling getPricingBreakdown...');
                 const pricingData = await getPricingBreakdown(location, duration);
+                console.log('📦 Received pricing data:', pricingData);
+                alert('Pricing data received! Check console for details.');
                 displayPricingResults(pricingData);
             } catch (error) {
-                console.error('Pricing search failed:', error);
+                console.error('❌ Pricing search failed:', error);
+                alert('Pricing search failed: ' + error.message);
                 resultsDiv.innerHTML = `
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                         <p class="text-red-800">Failed to fetch pricing data. Please try again.</p>
+                        <p class="text-red-600 text-sm">Error: ${error.message}</p>
                     </div>
                 `;
             }
         }
         
         function displayPricingResults(pricingData) {
+            console.log('🎨 displayPricingResults called with:', pricingData);
+            alert('displayPricingResults called! Check console for pricing data.');
+            
             const resultsDiv = document.getElementById('pricingResults');
             const pricing = pricingData.pricing;
             
