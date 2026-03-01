@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test</title>
+</head>
+<body>
+    <h1>JavaScript Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        console.log('🧪 Simple test page loaded');
+        
+        // Test basic functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DOM loaded');
+            
+            // Test currency functions
+            let userCurrency = 'USD';
+            let exchangeRates = {
+                rates: {
+                    'USD': 1.0,
+                    'EUR': 0.85,
+                    'GBP': 0.73
+                }
+            };
+            
+            function convertPrice(priceInUSD, targetCurrency) {
+                if (!exchangeRates || targetCurrency === 'USD') {
+                    return priceInUSD;
+                }
+                const rate = exchangeRates.rates[targetCurrency];
+                return rate ? priceInUSD * rate : priceInUSD;
+            }
+            
+            function formatCurrency(amount, currency) {
+                const convertedAmount = convertPrice(amount, currency);
+                const symbols = {'USD': '$', 'EUR': '€', 'GBP': '£'};
+                const symbol = symbols[currency] || '$';
+                return symbol + convertedAmount.toFixed(2);
+            }
+            
+            // Test pricing data structure
+            const testPricingData = {
+                location: 'Belize',
+                pricing: {
+                    average_price: 1750,
+                    components: {
+                        accommodation: {percentage: 35, estimated_cost: 612.5},
+                        diving: {percentage: 25, estimated_cost: 437.5},
+                        meals: {percentage: 20, estimated_cost: 350.0},
+                        transportation: {percentage: 15, estimated_cost: 262.5},
+                        equipment: {percentage: 5, estimated_cost: 87.5}
+                    }
+                }
+            };
+            
+            // Test display
+            const resultsDiv = document.getElementById('test-results');
+            let html = '<h2>Test Results:</h2>';
+            
+            // Test currency conversion
+            html += '<p><strong>Currency Test:</strong></p>';
+            html += '<p>USD: ' + formatCurrency(1750, 'USD') + '</p>';
+            html += '<p>EUR: ' + formatCurrency(1750, 'EUR') + '</p>';
+            html += '<p>GBP: ' + formatCurrency(1750, 'GBP') + '</p>';
+            
+            // Test components
+            html += '<p><strong>Components Test:</strong></p>';
+            if (testPricingData.pricing.components) {
+                for (const [component, data] of Object.entries(testPricingData.pricing.components)) {
+                    html += '<p>' + component + ': ' + data.percentage + '% - $' + data.estimated_cost + '</p>';
+                }
+            }
+            
+            // Test localStorage
+            html += '<p><strong>LocalStorage Test:</strong></p>';
+            try {
+                localStorage.setItem('test', 'working');
+                const stored = localStorage.getItem('test');
+                html += '<p>LocalStorage: ' + stored + '</p>';
+                localStorage.removeItem('test');
+            } catch (e) {
+                html += '<p>LocalStorage Error: ' + e.message + '</p>';
+            }
+            
+            resultsDiv.innerHTML = html;
+            console.log('✅ Simple test completed');
+        });
+    </script>
+</body>
+</html>
