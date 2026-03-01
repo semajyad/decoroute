@@ -482,6 +482,7 @@
             console.log('📋 Available trips count:', savedTrips.length);
             console.log('📋 Available trip IDs:', JSON.stringify(savedTrips.map(t => t.id)));
             console.log('📋 Available trip names:', JSON.stringify(savedTrips.map(t => t.name)));
+            console.log('📋 Full trip data structure:', JSON.stringify(savedTrips, null, 2));
             
             const trip = savedTrips.find(t => t.id === tripId);
             if (trip) {
@@ -534,15 +535,203 @@
             }
         }
         
-        // API-based booking functions (with fallback to enhanced mock data)
+        // API Configuration for real booking services
+        const API_CONFIG = {
+            // RapidAPI keys (you'll need to get these from rapidapi.com)
+            rapidApiKey: 'your-rapidapi-key-here',
+            
+            // Booking.com API (Affiliate API)
+            booking: {
+                baseUrl: 'https://booking-com15.p.rapidapi.com/api/v1',
+                headers: {
+                    'X-RapidAPI-Key': 'your-rapidapi-key-here',
+                    'X-RapidAPI-Host': 'booking-com15.p.rapidapi.com'
+                }
+            },
+            
+            // Skyscanner API
+            skyscanner: {
+                baseUrl: 'https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices',
+                headers: {
+                    'X-RapidAPI-Key': 'your-rapidapi-key-here',
+                    'X-RapidAPI-Host': 'skyscanner-skyscanner-flight-search-v1.p.rapidapi.com'
+                }
+            },
+            
+            // PADI API (would need direct partnership)
+            padi: {
+                baseUrl: 'https://api.padi.com',
+                headers: {
+                    'Authorization': 'Bearer your-padi-api-key-here',
+                    'Content-Type': 'application/json'
+                }
+            }
+        };
+        
+        // Check if API keys are configured
+        function areAPIKeysConfigured() {
+            return API_CONFIG.rapidApiKey !== 'your-rapidapi-key-here' && 
+                   API_CONFIG.padi.headers['Authorization'] !== 'Bearer your-padi-api-key-here';
+        }
+        
+        // API-based booking functions (with real API integration)
         async function searchAccommodations(destination, checkIn, checkOut) {
             console.log('🏨 Searching accommodations for:', destination);
             
-            // Skip API calls that require keys and use enhanced mock data
-            console.log('🏨 Using enhanced mock data with realistic booking URLs');
+            if (!areAPIKeysConfigured()) {
+                console.log('🏨 API keys not configured, using enhanced mock data');
+                return getMockAccommodations(destination, checkIn, checkOut);
+            }
             
-            // Enhanced mock data with very realistic Booking.com URLs
-            const accommodations = [
+            try {
+                // Real Booking.com API call
+                const response = await fetch(`${API_CONFIG.booking.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}`, {
+                    method: 'GET',
+                    headers: API_CONFIG.booking.headers
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🏨 Real API response:', data);
+                    return transformBookingData(data, destination, checkIn, checkOut);
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
+            } catch (error) {
+                console.log('🏨 API search failed, using mock data:', error);
+                return getMockAccommodations(destination, checkIn, checkOut);
+            }
+        }
+        
+        async function searchFlights(departure, arrival, date) {
+            console.log('🛫 Searching flights from:', departure, 'to:', arrival);
+            
+            if (!areAPIKeysConfigured()) {
+                console.log('🛫 API keys not configured, using enhanced mock data');
+                return getMockFlights(departure, arrival, date);
+            }
+            
+            try {
+                // Real Skyscanner API call
+                const departureCode = getAirportCode(departure);
+                const arrivalCode = getAirportCode(arrival);
+                
+                const response = await fetch(`${API_CONFIG.skyscanner.baseUrl}/browsequotes/v1.0/US/${departureCode}/USD/${arrivalCode}/${date}`, {
+                    method: 'GET',
+                    headers: API_CONFIG.skyscanner.headers
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🛫 Real API response:', data);
+                    return transformFlightData(data, departure, arrival, date);
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
+            } catch (error) {
+                console.log('🛫 API search failed, using mock data:', error);
+                return getMockFlights(departure, arrival, date);
+            }
+        }
+        
+        async function searchDivingPackages(destination) {
+            console.log('🤿 Searching diving packages for:', destination);
+            
+            if (!areAPIKeysConfigured()) {
+                console.log('🤿 API keys not configured, using enhanced mock data');
+                return getMockDivingPackages(destination);
+            }
+            
+            try {
+                // Real PADI API call
+                const response = await fetch(`${API_CONFIG.padi.baseUrl}/courses?location=${encodeURIComponent(destination)}`, {
+                    method: 'GET',
+                    headers: API_CONFIG.padi.headers
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('🤿 Real API response:', data);
+                    return transformPadiData(data, destination);
+                } else {
+                    throw new Error(`API returned ${response.status}`);
+                }
+            } catch (error) {
+                console.log('🤿 API search failed, using mock data:', error);
+                return getMockDivingPackages(destination);
+            }
+        }
+        
+        // Helper functions for data transformation
+        function transformBookingData(apiData, destination, checkIn, checkOut) {
+            // Transform real Booking.com API data to our format
+            return apiData.data?.map(hotel => ({
+                name: hotel.name || `${destination} Hotel`,
+                type: hotel.type || "Hotel",
+                rating: hotel.review_score || 4.0,
+                price_per_night: hotel.price || Math.round(Math.random() * 150 + 100),
+                amenities: hotel.amenities || ["WiFi", "Restaurant"],
+                image: hotel.photo_url || "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
+                bookingUrl: `https://www.booking.com/hotel/${hotel.hotel_id}.html?checkin=${checkIn}&checkout=${checkOut}`
+            })) || getMockAccommodations(destination, checkIn, checkOut);
+        }
+        
+        function transformFlightData(apiData, departure, arrival, date) {
+            // Transform real Skyscanner API data to our format
+            return apiData.Quotes?.map(quote => ({
+                airline: quote.OutboundLeg?.Carrier?.Name || "Unknown Airline",
+                departure: departure,
+                arrival: arrival,
+                price: quote.MinPrice || Math.round(Math.random() * 2000 + 800),
+                duration: formatDuration(quote.OutboundLeg?.Duration),
+                stops: quote.OutboundLeg?.Stops?.length || 0,
+                departureTime: quote.OutboundLeg?.DepartureTime?.split('T')[1]?.substring(0, 5) || "12:00",
+                arrivalTime: quote.OutboundLeg?.ArrivalTime?.split('T')[1]?.substring(0, 5) || "18:00",
+                bookingUrl: `https://www.skyscanner.net/transport/flights/${getAirportCode(departure)}/${getAirportCode(arrival)}/${date}?adults=1`
+            })) || getMockFlights(departure, arrival, date);
+        }
+        
+        function transformPadiData(apiData, destination) {
+            // Transform real PADI API data to our format
+            return apiData.courses?.map(course => ({
+                name: course.name || `${destination} Diving Course`,
+                dives: course.dives || 5,
+                duration: course.duration || "3 days",
+                price: course.price || Math.round(Math.random() * 300 + 200),
+                includes: course.includes || ["Equipment", "Guide"],
+                certification: course.certification_level || "Open Water",
+                bookingUrl: course.booking_url || `https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver?location=${encodeURIComponent(destination)}`
+            })) || getMockDivingPackages(destination);
+        }
+        
+        // Helper functions
+        function getAirportCode(location) {
+            // Simple airport code mapping (would need comprehensive database)
+            const codes = {
+                'New York': 'NYC',
+                'Los Angeles': 'LAX',
+                'London': 'LON',
+                'Paris': 'PAR',
+                'Tokyo': 'TYO',
+                'Sydney': 'SYD',
+                'Auckland': 'AKL',
+                'Belize': 'BZE',
+                'Great Barrier Reef': 'CNS',
+                'Maldives': 'MLE',
+                'Red Sea': 'SSH'
+            };
+            return codes[location] || location;
+        }
+        
+        function formatDuration(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+        
+        // Enhanced mock data functions (fallbacks)
+        function getMockAccommodations(destination, checkIn, checkOut) {
+            return [
                 {
                     name: `${destination} Dive Resort & Spa`,
                     type: "Resort",
@@ -571,18 +760,10 @@
                     bookingUrl: `https://www.booking.com/searchresults.html?label=gen173nr-1FCAEoggI46AdIM1gEaH2IAQGYAQ24AQfIAQzYAQHoAQH4AQuoAgM4&dest_id=-&dest_type=city&group_adults=2&group_children=0&hpos=1&hrooms=1&no_rooms=1&order=price&sb=1&src=index&src_elem=s&ss=${encodeURIComponent(destination)}&srs=1&checkin=${checkIn}&checkout=${checkOut}&nflt=price_filter%3D1`
                 }
             ];
-            
-            return accommodations;
         }
         
-        async function searchFlights(departure, arrival, date) {
-            console.log('🛫 Searching flights from:', departure, 'to:', arrival);
-            
-            // Skip API calls that require keys and use enhanced mock data
-            console.log('🛫 Using enhanced mock data with realistic airline URLs');
-            
-            // Enhanced mock data with very realistic airline booking URLs
-            const flights = [
+        function getMockFlights(departure, arrival, date) {
+            return [
                 {
                     airline: "Emirates",
                     departure: departure,
@@ -617,18 +798,10 @@
                     bookingUrl: `https://www.singaporeair.com/book-flight/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&departureDate=${date}&tripType=return&adults=1&children=0&infants=0&cabinClass=economy`
                 }
             ];
-            
-            return flights;
         }
         
-        async function searchDivingPackages(destination) {
-            console.log('🤿 Searching diving packages for:', destination);
-            
-            // Skip API calls that require keys and use enhanced mock data
-            console.log('🤿 Using enhanced mock data with realistic PADI URLs');
-            
-            // Enhanced mock data with very realistic PADI course URLs
-            const packages = [
+        function getMockDivingPackages(destination) {
+            return [
                 {
                     name: `${destination} Open Water Diver Course`,
                     dives: 5,
@@ -657,8 +830,6 @@
                     bookingUrl: `https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver?location=${encodeURIComponent(destination)}&language=en`
                 }
             ];
-            
-            return packages;
         }
         function updateDestination() {
             const destination = document.getElementById('tripDestination').value;
