@@ -95,12 +95,13 @@ async def health_check():
     return {"status": "healthy", "service": "decoroute-api"}
 
 # Include routers
-from routers import auth, trips, dive_sites, transit
+from routers import auth, trips, dive_sites, transit, search
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(trips.router, prefix="/api/trips", tags=["trips"])
 app.include_router(dive_sites.router, prefix="/api/dive-sites", tags=["dive sites"])
 app.include_router(transit.router, prefix="/api/transit", tags=["transit"])
+app.include_router(search.router, prefix="/api/search", tags=["search"])
 
 if __name__ == "__main__":
     import uvicorn
