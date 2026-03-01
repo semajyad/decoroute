@@ -3,6 +3,80 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="DecoRoute API")
 
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables if they don't exist"""
+    try:
+        from database import engine, Base
+        from models import User, DiveSite, TransitRoute, SavedTrip
+        
+        # Create all tables
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables initialized successfully")
+        
+        # Add sample data if needed
+        from sqlalchemy.orm import sessionmaker
+        SessionLocal = sessionmaker(bind=engine)
+        db = SessionLocal()
+        
+        try:
+            # Add demo dive sites if table is empty
+            from models import DiveSite
+            if db.query(DiveSite).count() == 0:
+                demo_sites = [
+                    DiveSite(
+                        name="Coral Bay",
+                        description="Beautiful coral reef with abundant marine life",
+                        location="Red Sea",
+                        country="Egypt",
+                        latitude=27.0,
+                        longitude=34.0,
+                        max_depth=30.0,
+                        water_type="saltwater",
+                        difficulty_level="intermediate",
+                        marine_life_highlights="Coral, tropical fish, turtles",
+                        best_season="Year-round",
+                        certification_required="Open Water",
+                        average_visibility=20.0,
+                        current_strength="moderate",
+                        is_active=True
+                    ),
+                    DiveSite(
+                        name="Blue Hole",
+                        description="Deep blue hole dive adventure",
+                        location="Belize Barrier Reef",
+                        country="Belize",
+                        latitude=17.0,
+                        longitude=-88.0,
+                        max_depth=40.0,
+                        water_type="saltwater",
+                        difficulty_level="advanced",
+                        marine_life_highlights="Deep water species, sharks",
+                        best_season="Apr-Jun",
+                        certification_required="Advanced",
+                        average_visibility=30.0,
+                        current_strength="strong",
+                        is_active=True
+                    )
+                ]
+                
+                for site in demo_sites:
+                    db.add(site)
+                db.commit()
+                print("✅ Demo dive sites added successfully")
+            else:
+                print("✅ Dive sites already exist")
+                
+        except Exception as e:
+            print(f"❌ Error adding demo data: {e}")
+        finally:
+            db.close()
+            
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        print("🔄 Application will run in demo mode")
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
