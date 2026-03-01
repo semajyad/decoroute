@@ -434,6 +434,153 @@
             }
         }
         
+        // New Workflow Functions
+        function updateDestination() {
+            const destination = document.getElementById('tripDestination').value;
+            console.log('🌍 Destination updated:', destination);
+            
+            if (destination) {
+                // Filter dive sites based on destination
+                const filteredSites = diveSites.filter(site => site.location === destination);
+                displayDiveSites(filteredSites);
+                
+                // Auto-calculate duration if dates are set
+                updateTripDates();
+            } else {
+                // Clear dive sites
+                document.getElementById('diveSitesContainer').innerHTML = '<p class="text-gray-500 col-span-full">Select a destination first to see available dive sites</p>';
+            }
+        }
+        
+        function updateTripDates() {
+            const startDate = document.getElementById('tripStartDate').value;
+            const endDate = document.getElementById('tripEndDate').value;
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                
+                if (days > 0) {
+                    document.getElementById('tripDuration').value = days;
+                    console.log('📅 Trip duration calculated:', days, 'days');
+                }
+            }
+        }
+        
+        function calculateTripPricing() {
+            const destination = document.getElementById('tripDestination').value;
+            const duration = parseInt(document.getElementById('tripDuration').value) || 7;
+            const numDives = parseInt(document.getElementById('tripDives').value) || 5;
+            
+            if (!destination) {
+                alert('Please select a destination first');
+                return;
+            }
+            
+            // Base costs by destination
+            const baseCosts = {
+                'Belize': 200,
+                'Red Sea': 180,
+                'Great Barrier Reef': 250,
+                'Maldives': 300,
+                'Caribbean': 220
+            };
+            
+            const baseCost = baseCosts[destination] || 200;
+            const totalCost = (baseCost * duration) + (baseCost * numDives * 0.8);
+            
+            const pricing = {
+                destination: destination,
+                duration: duration,
+                numDives: numDives,
+                average_price: Math.round(totalCost),
+                budget_price: Math.round(totalCost * 0.7),
+                luxury_price: Math.round(totalCost * 1.5),
+                price_per_day: Math.round(totalCost / duration),
+                components: {
+                    accommodation: {
+                        percentage: 35,
+                        estimated_cost: Math.round(totalCost * 0.35)
+                    },
+                    diving: {
+                        percentage: 25,
+                        estimated_cost: Math.round(totalCost * 0.25)
+                    },
+                    meals: {
+                        percentage: 20,
+                        estimated_cost: Math.round(totalCost * 0.20)
+                    },
+                    transportation: {
+                        percentage: 15,
+                        estimated_cost: Math.round(totalCost * 0.15)
+                    },
+                    equipment: {
+                        percentage: 5,
+                        estimated_cost: Math.round(totalCost * 0.05)
+                    }
+                }
+            };
+            
+            displayTripPricing(pricing);
+        }
+        
+        function displayTripPricing(pricing) {
+            const resultsDiv = document.getElementById('tripPricingResults');
+            
+            let html = '<div class="space-y-4">';
+            
+            // Basic pricing info
+            html += '<div class="bg-green-50 border border-green-200 rounded-lg p-4">';
+            html += '<h3 class="font-semibold text-green-800">Trip Cost Estimate for ' + pricing.destination + '</h3>';
+            html += '<div class="grid grid-cols-2 md:grid-cols-4 gap-4">';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Average</p><p class="text-xl font-bold text-green-700">$' + pricing.average_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Budget</p><p class="text-xl font-bold text-blue-700">$' + pricing.budget_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Luxury</p><p class="text-xl font-bold text-purple-700">$' + pricing.luxury_price + '</p></div>';
+            html += '<div class="text-center"><p class="text-sm text-gray-600">Per Day</p><p class="text-xl font-bold text-gray-700">$' + pricing.price_per_day + '</p></div>';
+            html += '</div></div>';
+            
+            // Components breakdown
+            html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">';
+            html += '<h4 class="font-semibold text-blue-800 mb-3">Cost Breakdown</h4>';
+            
+            Object.entries(pricing.components).forEach(([component, data]) => {
+                const componentName = component.charAt(0).toUpperCase() + component.slice(1);
+                const icon = getComponentIcon(component);
+                
+                html += '<div class="flex justify-between items-center p-2 bg-white rounded-lg mb-2">';
+                html += '<div class="flex items-center space-x-3">';
+                html += '<span>' + icon + '</span>';
+                html += '<span class="text-gray-700 font-medium">' + componentName + '</span>';
+                html += '<span class="text-xs text-gray-500">' + data.percentage + '% of total</span>';
+                html += '</div>';
+                html += '<span class="text-sm font-bold text-blue-700">$' + data.estimated_cost + '</span>';
+                html += '</div>';
+            });
+            
+            html += '</div></div>';
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.remove('hidden');
+        }
+        
+        function displayDiveSites(sites) {
+            const container = document.getElementById('diveSitesContainer');
+            
+            if (sites.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full">No dive sites available for this destination</p>';
+                return;
+            }
+            
+            container.innerHTML = sites.map(site => `
+                <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 cursor-pointer transition" onclick="addDive(${site.id})">
+                    <h3 class="font-semibold">${site.name}</h3>
+                    <p class="text-sm text-gray-600">${site.location}</p>
+                    <p class="text-xs text-gray-500">Max depth: ${site.max_depth}m</p>
+                </div>
+            `).join('');
+        }
+        
         // Make functions globally accessible
         window.deleteTrip = deleteTrip;
         window.editTrip = editTrip;
@@ -447,57 +594,84 @@
             console.log('Dives:', dives.length);
             console.log('Flight time:', flightTime);
             
+            // Get trip details from the form
+            const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
+            const tripDescription = document.getElementById('tripDescription')?.value || `Dive trip with ${dives.length} dives`;
+            const destination = document.getElementById('tripDestination')?.value || 'Unknown';
+            const startDate = document.getElementById('tripStartDate')?.value;
+            const endDate = document.getElementById('tripEndDate')?.value;
+            const duration = parseInt(document.getElementById('tripDuration')?.value) || 7;
+            const numDives = parseInt(document.getElementById('tripDives')?.value) || dives.length;
+            
+            if (!destination) {
+                alert('Please select a destination');
+                return;
+            }
+            
             if (dives.length === 0 || !flightTime) {
                 alert('Please add dives and set flight time before saving');
                 return;
             }
             
-            const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
-            const tripDescription = document.getElementById('tripDescription')?.value || `Dive trip with ${dives.length} dives`;
-            
             console.log('Trip name:', tripName);
-            console.log('Trip description:', tripDescription);
+            console.log('Destination:', destination);
+            console.log('Duration:', duration);
             
-            // Get destination from first dive site
-            const destination = dives.length > 0 ? dives[0].site.location : 'Unknown';
+            // Calculate pricing based on destination and trip details
+            const baseCosts = {
+                'Belize': 200,
+                'Red Sea': 180,
+                'Great Barrier Reef': 250,
+                'Maldives': 300,
+                'Caribbean': 220
+            };
+            
+            const baseCost = baseCosts[destination] || 200;
+            const totalCost = (baseCost * duration) + (baseCost * dives.length * 0.8);
             
             const tripData = {
                 name: tripName,
                 description: tripDescription,
                 destination: destination,
+                start_date: startDate || new Date().toISOString().split('T')[0],
+                end_date: endDate || flightTime.split('T')[0],
+                duration: duration,
                 dives: dives,
                 flightTime: flightTime,
                 created_at: new Date().toISOString(),
-                // Add pricing information
+                // Add comprehensive pricing information
                 pricing: {
-                    average_price: 1500 + (dives.length * 200),
-                    budget_price: 1000 + (dives.length * 150),
-                    luxury_price: 2000 + (dives.length * 300),
-                    price_per_day: Math.round((1500 + (dives.length * 200)) / 7),
+                    destination: destination,
+                    duration: duration,
+                    numDives: dives.length,
+                    average_price: Math.round(totalCost),
+                    budget_price: Math.round(totalCost * 0.7),
+                    luxury_price: Math.round(totalCost * 1.5),
+                    price_per_day: Math.round(totalCost / duration),
                     components: {
                         accommodation: {
                             percentage: 35,
-                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.35)
+                            estimated_cost: Math.round(totalCost * 0.35)
                         },
                         diving: {
                             percentage: 25,
-                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.25)
+                            estimated_cost: Math.round(totalCost * 0.25)
                         },
                         meals: {
                             percentage: 20,
-                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.20)
+                            estimated_cost: Math.round(totalCost * 0.20)
                         },
                         transportation: {
                             percentage: 15,
-                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.15)
+                            estimated_cost: Math.round(totalCost * 0.15)
                         },
                         equipment: {
                             percentage: 5,
-                            estimated_cost: Math.round((1500 + (dives.length * 200)) * 0.05)
+                            estimated_cost: Math.round(totalCost * 0.05)
                         }
                     }
                 },
-                total_cost_estimate: 1500 + (dives.length * 200)
+                total_cost_estimate: Math.round(totalCost)
             };
             
             // Save trip using the enhanced saveTrip function
@@ -1253,127 +1427,128 @@
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                         <h1 class="text-3xl font-bold text-gray-900 mb-8">Trip Planner</h1>
                         
-                        <!-- Trip Name Section -->
+                        <!-- Step 1: Trip Details -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                            <h2 class="text-xl font-semibold mb-4">Trip Details</h2>
-                            <div class="space-y-4">
+                            <h2 class="text-xl font-semibold mb-4">Step 1: Trip Details</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Trip Name</label>
                                     <input type="text" id="tripName" placeholder="My Diving Adventure" value="${currentTripName || ''}" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                                    <textarea id="tripDescription" placeholder="Describe your diving adventure..." rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
+                                    <select id="tripDestination" onchange="updateDestination()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Select destination...</option>
+                                        <option value="Belize">Belize</option>
+                                        <option value="Red Sea">Red Sea</option>
+                                        <option value="Great Barrier Reef">Great Barrier Reef</option>
+                                        <option value="Maldives">Maldives</option>
+                                        <option value="Caribbean">Caribbean</option>
+                                    </select>
                                 </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                    <input type="date" id="tripStartDate" onchange="updateTripDates()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                    <input type="date" id="tripEndDate" onchange="updateTripDates()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                                <textarea id="tripDescription" placeholder="Describe your diving adventure..." rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
                         </div>
                         
-                        <!-- Pricing Search Section -->
+                        <!-- Step 2: Pricing Calculator -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                            <h2 class="text-xl font-semibold mb-4">Trip Pricing</h2>
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Destination</label>
-                                        <select id="pricingLocation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                            <option value="">Select destination...</option>
-                                            <option value="Belize">Belize</option>
-                                            <option value="Red Sea">Red Sea</option>
-                                            <option value="Great Barrier Reef">Great Barrier Reef</option>
-                                            <option value="Maldives">Maldives</option>
-                                            <option value="Caribbean">Caribbean</option>
-                                            <option value="Thailand">Thailand</option>
-                                            <option value="Indonesia">Indonesia</option>
-                                            <option value="Philippines">Philippines</option>
-                                            <option value="Hawaii">Hawaii</option>
-                                            <option value="Florida">Florida</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Duration (days)</label>
-                                        <input type="number" id="pricingDuration" min="1" max="30" value="7" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    </div>
+                            <h2 class="text-xl font-semibold mb-4">Step 2: Pricing Calculator</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Days</label>
+                                    <input type="number" id="tripDuration" min="1" max="30" value="7" onchange="calculateTripPricing()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
-                                <button onclick="searchTripPricing()" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
-                                    <i class="fas fa-search mr-2"></i>Search Realistic Pricing
-                                </button>
-                                <div id="pricingResults" class="hidden">
-                                    <!-- Pricing results will be inserted here -->
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div class="lg:col-span-2">
-                                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h2 class="text-xl font-semibold">Select Dive Sites</h2>
-                                        <button onclick="showAddDiveSiteModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
-                                            <i class="fas fa-plus mr-1"></i>Add Site
-                                        </button>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        ${diveSites.map(site => `
-                                            <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-500 cursor-pointer transition" onclick="addDive(${site.id})">
-                                                <h3 class="font-semibold">${site.name}</h3>
-                                                <p class="text-sm text-gray-600">${site.location}</p>
-                                                <p class="text-xs text-gray-500">Max depth: ${site.max_depth}m</p>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-white rounded-xl shadow-lg p-6">
-                                    <h2 class="text-xl font-semibold mb-4">Your Dives</h2>
-                                    ${dives.length === 0 ? '<p class="text-gray-500">No dives added yet</p>' : dives.map((dive, i) => `
-                                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                                            <div class="flex justify-between items-start">
-                                                <div class="flex-1">
-                                                    <h4 class="font-semibold">Dive ${i + 1} - ${dive.site.name}</h4>
-                                                    <p class="text-sm text-gray-600">Date: ${new Date(dive.dive_datetime).toLocaleDateString()}</p>
-                                                    <p class="text-sm text-gray-600">Max depth: ${dive.max_depth}m</p>
-                                                    <p class="text-sm text-gray-600">Bottom time: ${dive.bottom_time}min</p>
-                                                </div>
-                                                <div class="flex space-x-2">
-                                                    <button onclick="editDive(${i})" class="text-blue-600 hover:text-blue-800">
-                                                        <i class="fas fa-edit mr-1"></i>Edit
-                                                    </button>
-                                                    <button onclick="removeDive(${i})" class="text-red-600 hover:text-red-800">
-                                                        <i class="fas fa-trash mr-1"></i>Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Dives</label>
+                                    <input type="number" id="tripDives" min="1" max="20" value="5" onchange="calculateTripPricing()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
                             
-                            <div>
-                                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                                    <h2 class="text-xl font-semibold mb-4">Flight Details</h2>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700 mb-2">Flight Date & Time</label>
-                                            <input type="datetime-local" id="flightTime" onchange="updateFlightTime(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        </div>
-                                        
-                                        <button onclick="performSafetyCheck()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
-                                            Check Flight Safety
-                                        </button>
-                                        
-                                        <div id="safetyResults" class="p-4 bg-gray-50 rounded-lg">
-                                            <p class="text-gray-500 text-sm">Add dives and flight time to check safety</p>
+                            <button onclick="calculateTripPricing()" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium mt-4">
+                                <i class="fas fa-calculator mr-2"></i>Calculate Trip Cost
+                            </button>
+                            
+                            <div id="tripPricingResults" class="mt-4 hidden">
+                                <!-- Pricing results will be inserted here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Available Dive Sites -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold">Step 3: Select Dive Sites</h2>
+                                <button onclick="showAddDiveSiteModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
+                                    <i class="fas fa-plus mr-1"></i>Add Site
+                                </button>
+                            </div>
+                            <div id="diveSitesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p class="text-gray-500 col-span-full">Select a destination first to see available dive sites</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Your Selected Dives -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <h2 class="text-xl font-semibold mb-4">Step 4: Your Selected Dives</h2>
+                            <div id="selectedDivesContainer">
+                                ${dives.length === 0 ? '<p class="text-gray-500">No dives selected yet</p>' : dives.map((dive, i) => `
+                                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="font-semibold">Dive ${i + 1} - ${dive.site.name}</h4>
+                                                <p class="text-sm text-gray-600">Location: ${dive.site.location}</p>
+                                                <p class="text-sm text-gray-600">Max depth: ${dive.site.max_depth}m</p>
+                                                <p class="text-sm text-gray-600">Date: ${new Date(dive.dive_datetime).toLocaleDateString()}</p>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button onclick="editDive(${i})" class="text-blue-600 hover:text-blue-800">
+                                                    <i class="fas fa-edit mr-1"></i>Edit
+                                                </button>
+                                                <button onclick="removeDive(${i})" class="text-red-600 hover:text-red-800">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Step 5: Flight Details -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                            <h2 class="text-xl font-semibold mb-4">Step 5: Flight Details</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Departure Flight Date & Time</label>
+                                    <input type="datetime-local" id="flightTime" onchange="updateFlightTime(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 
-                                <div class="bg-white rounded-xl shadow-lg p-6">
-                                    <h2 class="text-xl font-semibold mb-4">Save Trip</h2>
-                                    <button onclick="saveCurrentTrip()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
-                                        <i class="fas fa-save mr-2"></i>Save Trip
-                                    </button>
+                                <button onclick="performSafetyCheck()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                                    Check Flight Safety
+                                </button>
+                                
+                                <div id="safetyResults" class="p-4 bg-gray-50 rounded-lg">
+                                    <p class="text-gray-500 text-sm">Add dives and flight time to check safety</p>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Step 6: Save Trip -->
+                        <div class="bg-white rounded-xl shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Step 6: Save Trip</h2>
+                            <button onclick="saveCurrentTrip()" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                                <i class="fas fa-save mr-2"></i>Save Complete Trip
+                            </button>
                         </div>
                     </div>
                 </div>
