@@ -926,28 +926,6 @@
             }
         }
         
-        // Fallback flight search using Kiwi API
-        async function searchFlightsKiwi(departure, arrival, date) {
-            console.log('🛫 Using Kiwi API for flights...');
-            try {
-                const response = await fetch(`${API_CONFIG.alternatives.kiwi.baseUrl}/search?fly_from=${encodeURIComponent(departure)}&fly_to=${encodeURIComponent(arrival)}&date_from=${date}&date_to=${date}`, {
-                    method: 'GET',
-                    headers: API_CONFIG.alternatives.kiwi.headers
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('🛫 Kiwi API response:', data);
-                    return transformKiwiFlightData(data, departure, arrival, date);
-                } else {
-                    throw new Error(`Kiwi API returned ${response.status}`);
-                }
-            } catch (error) {
-                console.error('🛫 Kiwi API failed:', error);
-                throw error;
-            }
-        }
-        
         async function searchDivingPackages(destination) {
             console.log('🤿 Searching diving packages for:', destination);
             console.log('🔑 API Status:', areAPIKeysConfigured() ? 'Using real APIs' : 'Using mock data');
