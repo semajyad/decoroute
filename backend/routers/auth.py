@@ -107,7 +107,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
             username=username,
             full_name="Demo User",
             certification_level="Open Water",
-            password_hash="demo",
+            hashed_password="demo",
             total_dives=0,
             created_at=datetime.now()
         )
@@ -138,7 +138,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
             username=user.username,
             full_name=user.full_name,
             certification_level=user.certification_level,
-            password_hash=hashed_password,
+            hashed_password=hashed_password,
             total_dives=0
         )
         
@@ -162,7 +162,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
             username=user.username,
             full_name=user.full_name,
             certification_level=user.certification_level,
-            password_hash=hashed_password,
+            hashed_password=hashed_password,
             total_dives=0,
             created_at=datetime.now()
         )
@@ -198,7 +198,7 @@ async def login(user_data: dict, db: Session = Depends(get_db)):
             username=username,
             full_name="Demo User",
             certification_level="Open Water",
-            password_hash="demo",
+            hashed_password="demo",
             total_dives=0,
             created_at=datetime.now()
         )
