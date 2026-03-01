@@ -441,32 +441,6 @@
         window.closeAddDiveSiteModal = closeAddDiveSiteModal;
         window.addNewDiveSite = addNewDiveSite;
         window.searchTripPricing = searchTripPricing;
-        window.testAlert = testAlert;
-        
-        function testAlert() {
-            alert('🎉 JavaScript is working! If you see this, the script is loaded and functions are accessible.');
-            console.log('✅ testAlert() called successfully');
-            
-            // Test localStorage
-            try {
-                localStorage.setItem('testKey', 'testValue');
-                const stored = localStorage.getItem('testKey');
-                alert('💾 LocalStorage test: ' + stored);
-                console.log('💾 LocalStorage working:', stored);
-            } catch (e) {
-                alert('❌ LocalStorage error: ' + e.message);
-                console.error('❌ LocalStorage failed:', e);
-            }
-            
-            // Test currency system
-            try {
-                alert('💱 Currency system test: ' + (typeof userCurrency !== 'undefined' ? userCurrency : 'not defined'));
-                console.log('💱 User currency:', userCurrency);
-            } catch (e) {
-                alert('❌ Currency system error: ' + e.message);
-                console.error('❌ Currency system failed:', e);
-            }
-        }
         
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
@@ -512,7 +486,6 @@
         
         // Pricing Search Functions
         async function searchTripPricing() {
-            alert('🔍 searchTripPricing() called! This confirms the function is executing.');
             console.log('🔍 searchTripPricing() called');
             
             const location = document.getElementById('pricingLocation').value;
@@ -522,54 +495,36 @@
             console.log('⏱️ Duration:', duration);
             
             if (!location) {
-                alert('Please select a destination');
                 return;
             }
             
-            alert('📍 Starting search for: ' + location + ' (' + duration + ' days)');
             console.log('📡 Starting pricing search...');
             
             const resultsDiv = document.getElementById('pricingResults');
-            if (!resultsDiv) {
-                alert('❌ ERROR: pricingResults element not found!');
-                console.error('❌ pricingResults element not found');
-                return;
-            }
-            
             resultsDiv.innerHTML = '<p class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="text-gray-600 mt-2">Searching realistic pricing...</p></div>';
             resultsDiv.classList.remove('hidden');
             
             try {
-                alert('📡 About to call getPricingBreakdown...');
                 console.log('📡 Calling getPricingBreakdown...');
                 const pricingData = await getPricingBreakdown(location, duration);
-                alert('📦 Received pricing data! Check console for details.');
                 console.log('📦 Received pricing data:', pricingData);
                 console.log('📦 Data type:', typeof pricingData);
                 console.log('📦 Data keys:', Object.keys(pricingData));
                 
                 displayPricingResults(pricingData);
             } catch (error) {
-                alert('❌ ERROR: ' + error.message);
                 console.error('❌ Pricing search failed:', error);
                 resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-800">Failed to fetch pricing data. Please try again.</p><p class="text-red-600 text-sm">Error: ' + error.message + '</p></div>';
             }
         }
         
         function displayPricingResults(pricingData) {
-            alert('🎨 displayPricingResults() called! This confirms the display function is executing.');
             console.log('🎨 displayPricingResults called with:', pricingData);
             console.log('🎨 Data type:', typeof pricingData);
             
             const resultsDiv = document.getElementById('pricingResults');
-            if (!resultsDiv) {
-                alert('❌ ERROR: pricingResults element not found in display function!');
-                console.error('❌ pricingResults element not found in display function');
-                return;
-            }
             
             if (!pricingData) {
-                alert('❌ ERROR: No pricing data received!');
                 console.error('❌ No pricing data received');
                 resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing data received</p></div>';
                 return;
@@ -580,7 +535,6 @@
             console.log('💰 Pricing type:', typeof pricing);
             
             if (!pricing) {
-                alert('❌ ERROR: No pricing object in data!');
                 console.error('❌ No pricing object in data');
                 resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing information available</p></div>';
                 return;
@@ -589,8 +543,6 @@
             console.log('💰 Pricing keys:', Object.keys(pricing));
             console.log('💰 Has components:', 'components' in pricing);
             console.log('💰 Components data:', pricing.components);
-            
-            alert('💰 About to generate HTML with ' + Object.keys(pricing).length + ' pricing fields');
             
             // Simple HTML without complex template literals
             let html = '<div class="space-y-4">';
@@ -607,7 +559,6 @@
             
             // Components breakdown
             if (pricing.components) {
-                alert('🏗️ Found ' + Object.keys(pricing.components).length + ' components! Adding to display...');
                 console.log('🏗️ Adding components breakdown...');
                 html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">';
                 html += '<h4 class="font-semibold text-blue-800 mb-3">Cost Breakdown</h4>';
@@ -633,7 +584,6 @@
                 
                 html += '</div>';
             } else {
-                alert('❌ No components found in pricing data!');
                 console.log('❌ No components found');
                 html += '<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">';
                 html += '<p class="text-yellow-800">No detailed breakdown available</p>';
@@ -642,11 +592,8 @@
             
             html += '</div>';
             
-            alert('🎨 About to set HTML content...');
             console.log('🎨 Setting HTML...');
-            console.log('🎨 HTML length:', html.length);
             resultsDiv.innerHTML = html;
-            alert('✅ HTML set successfully! Check the page for results.');
             console.log('✅ displayPricingResults completed');
         }
         
@@ -914,9 +861,6 @@
         
         // Rendering Functions
         function renderApp() {
-            console.log('🎨 renderApp() called');
-            alert('🎨 APP RENDERING: The renderApp() function is being called!');
-            
             const app = document.getElementById('app');
             
             if (!currentUser) {
@@ -1318,9 +1262,6 @@
                                 </div>
                                 <button onclick="searchTripPricing()" class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition font-medium">
                                     <i class="fas fa-search mr-2"></i>Search Realistic Pricing
-                                </button>
-                                <button onclick="testAlert()" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition font-medium mt-2">
-                                    <i class="fas fa-test mr-2"></i>Test JavaScript (Click Me)
                                 </button>
                                 <div id="pricingResults" class="hidden">
                                     <!-- Pricing results will be inserted here -->
@@ -1731,12 +1672,6 @@
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Application starting...');
-            
-            // Immediate test to confirm JavaScript is working
-            setTimeout(() => {
-                alert('🧪 PAGE LOADED: JavaScript is working! If you see this, the app loaded successfully.');
-                console.log('✅ Page load test alert completed');
-            }, 2000);
             
             // Load saved trips from localStorage first
             loadSavedTrips();
