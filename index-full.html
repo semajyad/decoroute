@@ -443,9 +443,45 @@
         window.searchTripPricing = searchTripPricing;
         
         function saveCurrentTrip() {
-            console.log(' Saving trip...');
+            console.log('💾 Saving trip...');
             console.log('Dives:', dives.length);
             console.log('Flight time:', flightTime);
+            
+            if (dives.length === 0 || !flightTime) {
+                alert('Please add dives and set flight time before saving');
+                return;
+            }
+            
+            const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
+            const tripDescription = document.getElementById('tripDescription')?.value || `Dive trip with ${dives.length} dives`;
+            
+            console.log('Trip name:', tripName);
+            console.log('Trip description:', tripDescription);
+            
+            const tripData = {
+                name: tripName,
+                description: tripDescription,
+                dives: dives,
+                flightTime: flightTime,
+                created_at: new Date().toISOString()
+            };
+            
+            // Save trip using the enhanced saveTrip function
+            saveTrip(tripData).then(savedTrip => {
+                console.log('✅ Trip saved successfully:', savedTrip);
+                alert('Trip saved successfully!');
+                
+                // Clear current trip state
+                currentTripName = '';
+                currentTripId = null;
+                dives = [];
+                flightTime = '';
+                
+                navigate('my-trips');
+            }).catch(error => {
+                console.error('❌ Error saving trip:', error);
+                alert('Error saving trip: ' + error.message);
+            });
         }
         
         // Pricing Search Functions
@@ -473,11 +509,9 @@
                 console.log('📡 Calling getPricingBreakdown...');
                 const pricingData = await getPricingBreakdown(location, duration);
                 console.log('📦 Received pricing data:', pricingData);
-                alert('Pricing data received! Check console for details.');
                 displayPricingResults(pricingData);
             } catch (error) {
                 console.error('❌ Pricing search failed:', error);
-                alert('Pricing search failed: ' + error.message);
                 resultsDiv.innerHTML = `
                     <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                         <p class="text-red-800">Failed to fetch pricing data. Please try again.</p>
@@ -489,7 +523,6 @@
         
         function displayPricingResults(pricingData) {
             console.log('🎨 displayPricingResults called with:', pricingData);
-            alert('displayPricingResults called! Check console for pricing data.');
             
             const resultsDiv = document.getElementById('pricingResults');
             const pricing = pricingData.pricing;
@@ -1695,12 +1728,19 @@
         
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Application starting...');
+            
             // Load saved trips from localStorage first
             loadSavedTrips();
             
-            // Initialize currency system
+            // Initialize currency system with fallback
             initializeCurrency().then(() => {
                 console.log('💱 Currency system initialized');
+                console.log('🌍 User currency:', userCurrency);
+                renderApp();
+            }).catch(error => {
+                console.error('❌ Currency initialization failed:', error);
+                // Still render the app even if currency fails
                 renderApp();
             });
         });
