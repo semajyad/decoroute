@@ -35,9 +35,16 @@
     <script>
         const API_URL = 'http://localhost:8001';
         
+        console.log('🚀 Minimal test page loaded');
+        
         async function testPricing() {
+            console.log('🔍 testPricing() called');
+            
             const location = document.getElementById('location').value;
             const duration = parseInt(document.getElementById('duration').value);
+            
+            console.log('📍 Location:', location);
+            console.log('⏱️ Duration:', duration);
             
             if (!location) {
                 alert('Please select a destination');
@@ -48,7 +55,7 @@
             resultsDiv.innerHTML = '<p class="text-gray-600">Searching...</p>';
             
             try {
-                console.log('🔍 Testing pricing for:', location, duration);
+                console.log('� Making API call to:', `${API_URL}/api/search/pricing/breakdown`);
                 
                 const response = await fetch(`${API_URL}/api/search/pricing/breakdown`, {
                     method: 'POST',
@@ -57,56 +64,86 @@
                 });
                 
                 console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
                 
                 if (response.ok) {
                     const data = await response.json();
                     console.log('📦 Received data:', data);
+                    console.log('📦 Data type:', typeof data);
+                    console.log('📦 Data keys:', Object.keys(data));
+                    console.log('📦 Pricing data:', data.pricing);
+                    console.log('📦 Components:', data.pricing?.components);
+                    
                     displayResults(data);
                 } else {
-                    throw new Error('Failed to fetch pricing');
+                    const errorText = await response.text();
+                    console.error('❌ API Error:', response.status, errorText);
+                    resultsDiv.innerHTML = `<p class="text-red-600">API Error: ${response.status} - ${errorText}</p>`;
                 }
             } catch (error) {
-                console.error('❌ Error:', error);
-                resultsDiv.innerHTML = `<p class="text-red-600">Error: ${error.message}</p>`;
+                console.error('❌ Network Error:', error);
+                resultsDiv.innerHTML = `<p class="text-red-600">Network Error: ${error.message}</p>`;
             }
         }
         
         function displayResults(data) {
+            console.log('🎨 displayResults() called with:', data);
+            
             const resultsDiv = document.getElementById('results');
+            
+            if (!data || !data.pricing) {
+                console.error('❌ Invalid data structure');
+                resultsDiv.innerHTML = '<p class="text-red-600">Invalid data received</p>';
+                return;
+            }
+            
             const pricing = data.pricing;
+            console.log('💰 Pricing object:', pricing);
             
-            let html = `
-                <div class="bg-green-50 p-4 rounded">
-                    <h3 class="font-semibold text-green-800">Pricing for ${data.location}</h3>
-                    <div class="grid grid-cols-2 gap-4 mt-2">
-                        <div>Average: $${pricing.average_price}</div>
-                        <div>Budget: $${pricing.budget_price}</div>
-                        <div>Luxury: $${pricing.luxury_price}</div>
-                        <div>Per Day: $${pricing.price_per_day}</div>
-                    </div>
-            `;
+            let html = '<div class="bg-green-50 p-4 rounded">';
+            html += '<h3 class="font-semibold text-green-800">Pricing for ' + data.location + '</h3>';
             
+            // Basic pricing
+            html += '<div class="grid grid-cols-2 gap-4 mt-2">';
+            html += '<div>Average: $' + pricing.average_price + '</div>';
+            html += '<div>Budget: $' + pricing.budget_price + '</div>';
+            html += '<div>Luxury: $' + pricing.luxury_price + '</div>';
+            html += '<div>Per Day: $' + pricing.price_per_day + '</div>';
+            html += '</div>';
+            
+            // Components
             if (pricing.components) {
+                console.log('🏗️ Adding components breakdown...');
                 html += '<h4 class="font-semibold mt-4">Cost Breakdown:</h4>';
-                for (const [component, info] of Object.entries(pricing.components)) {
-                    html += `
-                        <div class="flex justify-between items-center py-1">
-                            <span>${component}</span>
-                            <span>${info.percentage}% - $${info.estimated_cost}</span>
-                        </div>
-                    `;
-                }
+                
+                const componentEntries = Object.entries(pricing.components);
+                console.log('📦 Component entries:', componentEntries);
+                
+                componentEntries.forEach(([component, info]) => {
+                    console.log('📦 Processing component:', component, info);
+                    html += '<div class="flex justify-between items-center py-1 border-b">';
+                    html += '<span>' + component + '</span>';
+                    html += '<span>' + info.percentage + '% - $' + info.estimated_cost + '</span>';
+                    html += '</div>';
+                });
+            } else {
+                console.log('❌ No components found');
+                html += '<p class="text-yellow-600">No components available</p>';
             }
             
             html += '</div>';
+            
+            console.log('🎨 Setting HTML...');
             resultsDiv.innerHTML = html;
+            console.log('✅ displayResults completed');
         }
         
         // Test localStorage
         console.log('💾 Testing localStorage...');
         try {
             localStorage.setItem('test', 'working');
-            console.log('✅ LocalStorage working');
+            const stored = localStorage.getItem('test');
+            console.log('✅ LocalStorage working:', stored);
         } catch (e) {
             console.error('❌ LocalStorage failed:', e);
         }

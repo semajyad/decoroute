@@ -486,46 +486,64 @@
         
         // Pricing Search Functions
         async function searchTripPricing() {
+            console.log('🔍 searchTripPricing() called');
+            
             const location = document.getElementById('pricingLocation').value;
             const duration = parseInt(document.getElementById('pricingDuration').value);
+            
+            console.log('📍 Location:', location);
+            console.log('⏱️ Duration:', duration);
             
             if (!location) {
                 alert('Please select a destination');
                 return;
             }
             
-            console.log('🔍 Starting pricing search for:', location, duration);
+            console.log('� Starting pricing search...');
             
             const resultsDiv = document.getElementById('pricingResults');
-            resultsDiv.innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i>
-                    <p class="text-gray-600 mt-2">Searching realistic pricing...</p>
-                </div>
-            `;
+            resultsDiv.innerHTML = '<p class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-600 text-2xl"></i><p class="text-gray-600 mt-2">Searching realistic pricing...</p></div>';
             resultsDiv.classList.remove('hidden');
             
             try {
                 console.log('📡 Calling getPricingBreakdown...');
                 const pricingData = await getPricingBreakdown(location, duration);
                 console.log('📦 Received pricing data:', pricingData);
+                console.log('📦 Data type:', typeof pricingData);
+                console.log('📦 Data keys:', Object.keys(pricingData));
+                
                 displayPricingResults(pricingData);
             } catch (error) {
                 console.error('❌ Pricing search failed:', error);
-                resultsDiv.innerHTML = `
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p class="text-red-800">Failed to fetch pricing data. Please try again.</p>
-                        <p class="text-red-600 text-sm">Error: ${error.message}</p>
-                    </div>
-                `;
+                resultsDiv.innerHTML = '<div class="bg-red-50 border border-red-200 rounded-lg p-4"><p class="text-red-800">Failed to fetch pricing data. Please try again.</p><p class="text-red-600 text-sm">Error: ' + error.message + '</p></div>';
             }
         }
         
         function displayPricingResults(pricingData) {
             console.log('🎨 displayPricingResults called with:', pricingData);
+            console.log('🎨 Data type:', typeof pricingData);
             
             const resultsDiv = document.getElementById('pricingResults');
+            
+            if (!pricingData) {
+                console.error('❌ No pricing data received');
+                resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing data received</p></div>';
+                return;
+            }
+            
             const pricing = pricingData.pricing;
+            console.log('💰 Pricing object:', pricing);
+            console.log('💰 Pricing type:', typeof pricing);
+            
+            if (!pricing) {
+                console.error('❌ No pricing object in data');
+                resultsDiv.innerHTML = '<div class="bg-red-50 p-4"><p class="text-red-800">No pricing information available</p></div>';
+                return;
+            }
+            
+            console.log('💰 Pricing keys:', Object.keys(pricing));
+            console.log('💰 Has components:', 'components' in pricing);
+            console.log('💰 Components data:', pricing.components);
             
             // Simple HTML without complex template literals
             let html = '<div class="space-y-4">';
@@ -546,10 +564,14 @@
                 html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4">';
                 html += '<h4 class="font-semibold text-blue-800 mb-3">Cost Breakdown</h4>';
                 
-                for (const [component, data] of Object.entries(pricing.components)) {
+                const componentEntries = Object.entries(pricing.components);
+                console.log('📦 Component entries:', componentEntries);
+                console.log('📦 Component count:', componentEntries.length);
+                
+                componentEntries.forEach(([component, data]) => {
                     const componentName = component.charAt(0).toUpperCase() + component.slice(1);
                     const icon = getComponentIcon(component);
-                    console.log('📦 Adding component:', componentName);
+                    console.log('📦 Adding component:', componentName, data);
                     
                     html += '<div class="flex justify-between items-center p-2 bg-white rounded-lg mb-2">';
                     html += '<div class="flex items-center space-x-3">';
@@ -559,7 +581,7 @@
                     html += '</div>';
                     html += '<span class="text-sm font-bold text-blue-700">$' + data.estimated_cost + '</span>';
                     html += '</div>';
-                }
+                });
                 
                 html += '</div>';
             } else {
