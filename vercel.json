@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "decoroute",
   "builds": [
     {
       "src": "index.html",
@@ -9,16 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/",
+      "src": "/(.*)",
       "dest": "/index.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "https://decoroute-api.onrender.com/api/$1"
     }
-  ],
-  "env": {
-    "API_URL": "https://decoroute-api.onrender.com",
-    "DEPLOYMENT_TIME": "2026-03-01T17:11:00Z"
-  }
+  ]
 }
