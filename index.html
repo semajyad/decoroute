@@ -66,11 +66,60 @@
         let currentTripId = null;
         let savedTrips = [];
         let diveSites = [
-            { id: 1, name: "Coral Bay", location: "Red Sea", description: "Beautiful coral reef with abundant marine life", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
-            { id: 2, name: "Blue Hole", location: "Belize", description: "Deep blue hole dive adventure", image: "https://images.unsplash.com/photo-1578052370525-6e9defcbdcd2?w=400&h=300&fit=crop", max_depth: 40 },
-            { id: 3, name: "Great Barrier Reef", location: "Australia", description: "World's largest coral reef system", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
-            { id: 4, name: "Red Sea", location: "Egypt", description: "Crystal clear waters and vibrant marine life", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 35 },
-            { id: 5, name: "Maldives", location: "Maldives", description: "Tropical paradise diving experience", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop", max_depth: 20 }
+            // Belize
+            { id: 1, name: "Blue Hole", location: "Belize", description: "World-famous deep blue hole dive adventure", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            { id: 2, name: "Hol Chan Marine Reserve", location: "Belize", description: "Vibrant coral reef with abundant marine life", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            { id: 3, name: "Ambergris Caye", location: "Belize", description: "Beautiful barrier reef diving", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 4, name: "Turneffe Atoll", location: "Belize", description: "Pristine atoll with amazing visibility", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 35 },
+            
+            // Red Sea
+            { id: 5, name: "Ras Mohammed", location: "Red Sea", description: "Stunning coral walls and pelagic fish", image: "https://images.unsplash.com/photo-1578052370525-6e9defcbdcd2?w=400&h=300&fit=crop", max_depth: 50 },
+            { id: 6, name: "SS Thistlegorm Wreck", location: "Red Sea", description: "Famous WWII shipwreck dive", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 7, name: "Brothers Islands", location: "Red Sea", description: "Shark encounters and pristine corals", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            { id: 8, name: "Sharm El Sheikh", location: "Red Sea", description: "Easy access to vibrant reefs", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            
+            // Great Barrier Reef
+            { id: 9, name: "Coral Sea", location: "Great Barrier Reef", description: "Outer reef with pristine corals", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 10, name: "Osprey Reef", location: "Great Barrier Reef", description: "Shark diving at its finest", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            { id: 11, name: "Cod Hole", location: "Great Barrier Reef", description: "Famous for massive potato cod", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            { id: 12, name: "Ribbon Reefs", location: "Great Barrier Reef", description: "Stunning coral formations", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 20 },
+            
+            // Maldives
+            { id: 13, name: "Maaya Thila", location: "Maldives", description: "Night diving with white tip sharks", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 14, name: "Fish Head", location: "Maldives", description: "Nurse shark and stingray encounters", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop", max_depth: 25 },
+            { id: 15, name: "Kuda Haa", location: "Maldives", description: "Beautiful underwater topography", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop", max_depth: 35 },
+            { id: 16, name: "Miyaru Faru", location: "Maldives", description: "Manta ray cleaning station", image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop", max_depth: 20 },
+            
+            // Caribbean
+            { id: 17, name: "Cayman Wall", location: "Caribbean", description: "Dramatic wall diving with turtles", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 100 },
+            { id: 18, name: "Bonaire Marine Park", location: "Caribbean", description: "Shore diving paradise", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 19, name: "Stingray City", location: "Caribbean", description: "Interactive stingray experience", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 15 },
+            { id: 20, name: "Blue Hole (GoM)", location: "Caribbean", description: "Deep blue hole in Gulf of Mexico", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            
+            // New Destinations
+            // Indonesia
+            { id: 21, name: "Komodo National Park", location: "Indonesia", description: "Manta rays and dragons", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            { id: 22, name: "Raja Ampat", location: "Indonesia", description: "Most biodiverse reefs on Earth", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 23, name: "Bali Tulamben", location: "Indonesia", description: "USAT Liberty wreck dive", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 24, name: "Wakatobi", location: "Indonesia", description: "Pristine coral gardens", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            
+            // Philippines
+            { id: 25, name: "Tubbataha Reef", location: "Philippines", description: "UNESCO World Heritage site", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 35 },
+            { id: 26, name: "Malapascua", location: "Philippines", description: "Thresher shark encounters", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 27, name: "Coron Bay", location: "Philippines", description: "Japanese WWII shipwrecks", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
+            { id: 28, name: "Apo Island", location: "Philippines", description: "Marine sanctuary with turtles", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            
+            // Fiji
+            { id: 29, name: "Beqa Lagoon", location: "Fiji", description: "Shark diving paradise", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 30, name: "Soft Coral Capital", location: "Fiji", description: "World's best soft coral dive", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            { id: 31, name: "Namena Marine Reserve", location: "Fiji", description: "Pristine marine reserve", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 35 },
+            { id: 32, name: "Rainbow Reef", location: "Fiji", description: "Vibrant coral formations", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 20 },
+            
+            // Galapagos
+            { id: 33, name: "Darwin Island", location: "Galapagos", description: "Whale shark encounters", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 25 },
+            { id: 34, name: "Wolf Island", location: "Galapagos", description: "Schooling hammerheads", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 30 },
+            { id: 35, name: "Cousins Rock", location: "Galapagos", description: "Sea lion playground", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 20 },
+            { id: 36, name: "Gordon Rocks", location: "Galapagos", description: "Volcanic formations with sharks", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 35 }
         ];
         
         // API Functions
@@ -216,7 +265,8 @@
                 'CAD': 'C$',
                 'CHF': 'CHF ',
                 'CNY': '¥',
-                'INR': '₹'
+                'INR': '₹',
+                'NZD': 'NZ$'
             };
             
             const symbol = currencySymbols[currency] || '$';
@@ -471,29 +521,33 @@
         function calculateTripPricing() {
             const destination = document.getElementById('tripDestination').value;
             const duration = parseInt(document.getElementById('tripDuration').value) || 7;
-            const numDives = parseInt(document.getElementById('tripDives').value) || 5;
+            const divingDays = parseInt(document.getElementById('tripDivingDays').value) || 5;
             
             if (!destination) {
                 alert('Please select a destination first');
                 return;
             }
             
-            // Base costs by destination
+            // Base costs by destination (per day)
             const baseCosts = {
                 'Belize': 200,
                 'Red Sea': 180,
                 'Great Barrier Reef': 250,
                 'Maldives': 300,
-                'Caribbean': 220
+                'Caribbean': 220,
+                'Indonesia': 150,
+                'Philippines': 120,
+                'Fiji': 160,
+                'Galapagos': 350
             };
             
             const baseCost = baseCosts[destination] || 200;
-            const totalCost = (baseCost * duration) + (baseCost * numDives * 0.8);
+            const totalCost = (baseCost * duration) + (baseCost * divingDays * 0.8);
             
             const pricing = {
                 destination: destination,
                 duration: duration,
-                numDives: numDives,
+                divingDays: divingDays,
                 average_price: Math.round(totalCost),
                 budget_price: Math.round(totalCost * 0.7),
                 luxury_price: Math.round(totalCost * 1.5),
@@ -592,7 +646,6 @@
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
             console.log('Dives:', dives.length);
-            console.log('Flight time:', flightTime);
             
             // Get trip details from the form
             const tripName = document.getElementById('tripName')?.value || `Trip ${new Date().toLocaleDateString()}`;
@@ -601,21 +654,23 @@
             const startDate = document.getElementById('tripStartDate')?.value;
             const endDate = document.getElementById('tripEndDate')?.value;
             const duration = parseInt(document.getElementById('tripDuration')?.value) || 7;
-            const numDives = parseInt(document.getElementById('tripDives')?.value) || dives.length;
+            const divingDays = parseInt(document.getElementById('tripDivingDays')?.value) || dives.length;
+            const finalDiveDay = document.getElementById('finalDiveDay')?.value;
             
             if (!destination) {
                 alert('Please select a destination');
                 return;
             }
             
-            if (dives.length === 0 || !flightTime) {
-                alert('Please add dives and set flight time before saving');
+            if (dives.length === 0) {
+                alert('Please add dives before saving');
                 return;
             }
             
             console.log('Trip name:', tripName);
             console.log('Destination:', destination);
             console.log('Duration:', duration);
+            console.log('Diving days:', divingDays);
             
             // Calculate pricing based on destination and trip details
             const baseCosts = {
@@ -623,27 +678,32 @@
                 'Red Sea': 180,
                 'Great Barrier Reef': 250,
                 'Maldives': 300,
-                'Caribbean': 220
+                'Caribbean': 220,
+                'Indonesia': 150,
+                'Philippines': 120,
+                'Fiji': 160,
+                'Galapagos': 350
             };
             
             const baseCost = baseCosts[destination] || 200;
-            const totalCost = (baseCost * duration) + (baseCost * dives.length * 0.8);
+            const totalCost = (baseCost * duration) + (baseCost * divingDays * 0.8);
             
             const tripData = {
                 name: tripName,
                 description: tripDescription,
                 destination: destination,
                 start_date: startDate || new Date().toISOString().split('T')[0],
-                end_date: endDate || flightTime.split('T')[0],
+                end_date: endDate || new Date().toISOString().split('T')[0],
                 duration: duration,
+                divingDays: divingDays,
+                finalDiveDay: finalDiveDay,
                 dives: dives,
-                flightTime: flightTime,
                 created_at: new Date().toISOString(),
                 // Add comprehensive pricing information
                 pricing: {
                     destination: destination,
                     duration: duration,
-                    numDives: dives.length,
+                    divingDays: divingDays,
                     average_price: Math.round(totalCost),
                     budget_price: Math.round(totalCost * 0.7),
                     luxury_price: Math.round(totalCost * 1.5),
@@ -1444,6 +1504,10 @@
                                         <option value="Great Barrier Reef">Great Barrier Reef</option>
                                         <option value="Maldives">Maldives</option>
                                         <option value="Caribbean">Caribbean</option>
+                                        <option value="Indonesia">Indonesia</option>
+                                        <option value="Philippines">Philippines</option>
+                                        <option value="Fiji">Fiji</option>
+                                        <option value="Galapagos">Galapagos</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1466,12 +1530,12 @@
                             <h2 class="text-xl font-semibold mb-4">Step 2: Pricing Calculator</h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Days</label>
-                                    <input type="number" id="tripDuration" min="1" max="30" value="7" onchange="calculateTripPricing()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Diving Days</label>
+                                    <input type="number" id="tripDivingDays" min="1" max="20" value="5" onchange="calculateTripPricing()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Number of Dives</label>
-                                    <input type="number" id="tripDives" min="1" max="20" value="5" onchange="calculateTripPricing()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Total Trip Days</label>
+                                    <input type="number" id="tripDuration" min="1" max="30" value="7" readonly class="w-full px-4 py-3 border border-gray-300 bg-gray-100 rounded-lg">
                                 </div>
                             </div>
                             
@@ -1524,21 +1588,20 @@
                             </div>
                         </div>
                         
-                        <!-- Step 5: Flight Details -->
+                        <!-- Step 5: Final Dive Day Calculation -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                            <h2 class="text-xl font-semibold mb-4">Step 5: Flight Details</h2>
+                            <h2 class="text-xl font-semibold mb-4">Step 5: Final Dive Day</h2>
                             <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Departure Flight Date & Time</label>
-                                    <input type="datetime-local" id="flightTime" onchange="updateFlightTime(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                </div>
-                                
-                                <button onclick="performSafetyCheck()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
-                                    Check Flight Safety
-                                </button>
-                                
-                                <div id="safetyResults" class="p-4 bg-gray-50 rounded-lg">
-                                    <p class="text-gray-500 text-sm">Add dives and flight time to check safety</p>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">Diving Safety Information</h4>
+                                    <p class="text-gray-700">Based on your trip dates, your final dive day should be at least 18-24 hours before your departure.</p>
+                                    <div class="mt-3">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Final Dive Day</label>
+                                        <input type="date" id="finalDiveDay" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-600">
+                                        <p>💡 <strong>Recommended:</strong> Schedule your final dive for at least 24 hours before departure for maximum safety.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
