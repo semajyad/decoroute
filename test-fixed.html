@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Test - Fixed Version</title>
+</head>
+<body>
+    <h1>JavaScript Reference Test</h1>
+    <p>If you can see this message, the JavaScript error is fixed!</p>
+    
+    <script>
+        console.log('Testing if searchFlightsKiwi function exists...');
+        
+        // Test if function is defined
+        if (typeof searchFlightsKiwi === 'function') {
+            console.log('✅ SUCCESS: searchFlightsKiwi is defined!');
+            document.body.style.backgroundColor = 'lightgreen';
+        } else {
+            console.log('❌ FAILED: searchFlightsKiwi is not defined');
+            document.body.style.backgroundColor = 'lightcoral';
+        }
+        
+        // Test if we can call it
+        try {
+            if (typeof searchFlightsKiwi === 'function') {
+                console.log('✅ SUCCESS: Can call searchFlightsKiwi!');
+                // This would work in the real app
+                // searchFlightsKiwi('Auckland', 'Sydney', '2026-03-28');
+            }
+        } catch (error) {
+            console.log('❌ ERROR: Cannot call searchFlightsKiwi:', error);
+        }
+    </script>
+</body>
+</html>
