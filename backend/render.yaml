@@ -1,0 +1,26 @@
+services:
+  # FastAPI Web Service
+  - type: web
+    name: decoroute-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_Wj2ZKrh0QmUE@ep-icy-moon-aixigz3n-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: SECRET_KEY
+        value: decoroute-production-secret-key-2024-secure-change-me
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+    autoDeploy: true
+    
+  # Optional: Add a PostgreSQL service (commented out since we're using Neon)
+  # - type: pserv
+  #   name: decoroute-db
+  #   plan: free
+  #   databaseName: decoroute
+  #   user: decoroute_user
