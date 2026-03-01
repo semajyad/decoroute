@@ -869,8 +869,7 @@
             
             if (!areAPIKeysConfigured()) {
                 console.log('🏨 API keys not configured, using enhanced mock data');
-                console.log('🛫 API keys not configured, using enhanced mock data');
-                return getMockFlights(departure, arrival, date);
+                return getMockAccommodations(destination, checkIn, checkOut);
             }
             
             try {
