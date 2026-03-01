@@ -478,14 +478,49 @@
         function editTrip(tripId) {
             const trip = savedTrips.find(t => t.id === tripId);
             if (trip) {
+                console.log('📝 Editing trip:', trip);
+                
                 // Navigate to planner with trip data
                 currentPage = 'planner';
+                
                 // Load trip data into current state
                 dives = trip.dives || [];
-                flightTime = trip.flightTime || '';
                 currentTripName = trip.name;
                 currentTripId = tripId;
+                
+                // Load trip data into form fields
+                setTimeout(() => {
+                    if (document.getElementById('tripName')) {
+                        document.getElementById('tripName').value = trip.name || '';
+                    }
+                    if (document.getElementById('tripDescription')) {
+                        document.getElementById('tripDescription').value = trip.description || '';
+                    }
+                    if (document.getElementById('tripDestination')) {
+                        document.getElementById('tripDestination').value = trip.destination || '';
+                        updateDestination();
+                    }
+                    if (document.getElementById('tripStartDate')) {
+                        document.getElementById('tripStartDate').value = trip.start_date || '';
+                    }
+                    if (document.getElementById('tripEndDate')) {
+                        document.getElementById('tripEndDate').value = trip.end_date || '';
+                        updateTripDates();
+                    }
+                    if (document.getElementById('tripDivingDays')) {
+                        document.getElementById('tripDivingDays').value = trip.divingDays || 5;
+                        calculateTripPricing();
+                    }
+                    
+                    // Update complete summary
+                    updateCompleteTripSummary();
+                    
+                    console.log('✅ Trip data loaded into form');
+                }, 100);
+                
                 renderApp();
+            } else {
+                console.error('❌ Trip not found:', tripId);
             }
         }
         
@@ -575,7 +610,7 @@
                     stops: "1 stop",
                     departureTime: "22:45",
                     arrivalTime: "17:15+1",
-                    bookingUrl: "https://www.emirates.com/"
+                    bookingUrl: "https://www.emirates.com/book-flight/"
                 },
                 {
                     airline: "Qatar Airways",
@@ -586,7 +621,7 @@
                     stops: "1 stop",
                     departureTime: "09:30",
                     arrivalTime: "08:45+1",
-                    bookingUrl: "https://www.qatarairways.com/"
+                    bookingUrl: "https://www.qatarairways.com/book-flight/"
                 },
                 {
                     airline: "Singapore Airlines",
@@ -597,7 +632,7 @@
                     stops: "2 stops",
                     departureTime: "15:20",
                     arrivalTime: "14:40+2",
-                    bookingUrl: "https://www.singaporeair.com/"
+                    bookingUrl: "https://www.singaporeair.com/book-flight/"
                 }
             ];
             
@@ -657,7 +692,7 @@
                     price_per_night: Math.round(Math.random() * 150 + 100),
                     amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
                     image: "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
-                    bookingUrl: "https://www.booking.com/"
+                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=resort`
                 },
                 {
                     name: `${destination} Beach Hotel`,
@@ -666,7 +701,7 @@
                     price_per_night: Math.round(Math.random() * 100 + 80),
                     amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
                     image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300&h=200&fit=crop",
-                    bookingUrl: "https://www.booking.com/"
+                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=hotel`
                 },
                 {
                     name: `${destination} Guesthouse`,
@@ -675,7 +710,7 @@
                     price_per_night: Math.round(Math.random() * 60 + 40),
                     amenities: ["Kitchen", "WiFi", "Garden"],
                     image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
-                    bookingUrl: "https://www.booking.com/"
+                    bookingUrl: `https://www.booking.com/searchresults.html?ss=${destination}&label=guesthouse`
                 }
             ];
             
@@ -731,7 +766,7 @@
                     price: Math.round(Math.random() * 300 + 200),
                     includes: ["Equipment", "Guide", "Boat", "Tanks"],
                     certification: "Open Water Required",
-                    bookingUrl: "https://www.padi.com/"
+                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/open-water-diver"
                 },
                 {
                     name: `${destination} Adventure Package`,
@@ -740,7 +775,7 @@
                     price: Math.round(Math.random() * 500 + 400),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
                     certification: "Advanced Open Water",
-                    bookingUrl: "https://www.padi.com/"
+                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/advanced-open-water-diver"
                 },
                 {
                     name: `${destination} Pro Package`,
@@ -749,7 +784,7 @@
                     price: Math.round(Math.random() * 700 + 600),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
                     certification: "Rescue Diver",
-                    bookingUrl: "https://www.padi.com/"
+                    bookingUrl: "https://www.padi.com/padi-courses/diving-certification-courses/rescue-diver"
                 }
             ];
             
@@ -972,7 +1007,7 @@
                     stops: "1 stop",
                     departureTime: "22:45",
                     arrivalTime: "17:15+1",
-                    bookingUrl: "https://www.emirates.com/"
+                    bookingUrl: "https://www.emirates.com/book-flight/"
                 },
                 {
                     airline: "Qatar Airways",
@@ -983,7 +1018,7 @@
                     stops: "1 stop",
                     departureTime: "09:30",
                     arrivalTime: "08:45+1",
-                    bookingUrl: "https://www.qatarairways.com/"
+                    bookingUrl: "https://www.qatarairways.com/book-flight/"
                 },
                 {
                     airline: "Singapore Airlines",
@@ -994,7 +1029,7 @@
                     stops: "2 stops",
                     departureTime: "15:20",
                     arrivalTime: "14:40+2",
-                    bookingUrl: "https://www.singaporeair.com/"
+                    bookingUrl: "https://www.singaporeair.com/book-flight/"
                 }
             ];
             
