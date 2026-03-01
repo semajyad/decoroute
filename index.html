@@ -517,6 +517,8 @@
             const country = document.getElementById('departureCountry').value;
             const citySelect = document.getElementById('departureCity');
             
+            console.log('🏙️ Updating departure cities for country:', country);
+            
             const cities = {
                 'US': ['New York', 'Los Angeles', 'Chicago', 'Miami', 'San Francisco', 'Seattle', 'Boston', 'Denver'],
                 'UK': ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Edinburgh', 'Liverpool', 'Bristol'],
@@ -539,9 +541,13 @@
                     citySelect.appendChild(option);
                 });
                 
-                console.log('🏙️ Cities loaded for country:', country);
+                console.log('🏙️ Cities loaded for country:', country, 'Count:', cities[country].length);
+                
+                // Trigger flight options update
+                setTimeout(() => updateFlightOptions(), 100);
             } else {
                 citySelect.innerHTML = '<option value="">Select country first...</option>';
+                console.log('🏙️ No cities for country:', country);
             }
         }
         
@@ -569,7 +575,7 @@
                     stops: "1 stop",
                     departureTime: "22:45",
                     arrivalTime: "17:15+1",
-                    bookingUrl: `https://www.emirates.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.emirates.com/"
                 },
                 {
                     airline: "Qatar Airways",
@@ -580,7 +586,7 @@
                     stops: "1 stop",
                     departureTime: "09:30",
                     arrivalTime: "08:45+1",
-                    bookingUrl: `https://www.qatarairways.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.qatarairways.com/"
                 },
                 {
                     airline: "Singapore Airlines",
@@ -591,7 +597,7 @@
                     stops: "2 stops",
                     departureTime: "15:20",
                     arrivalTime: "14:40+2",
-                    bookingUrl: `https://www.singaporeair.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.singaporeair.com/"
                 }
             ];
             
@@ -651,7 +657,7 @@
                     price_per_night: Math.round(Math.random() * 150 + 100),
                     amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
                     image: "https://images.unsplash.com/photo-1582238691950-1a5e732dec90?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=resort`
+                    bookingUrl: "https://www.booking.com/"
                 },
                 {
                     name: `${destination} Beach Hotel`,
@@ -660,7 +666,7 @@
                     price_per_night: Math.round(Math.random() * 100 + 80),
                     amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
                     image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=hotel`
+                    bookingUrl: "https://www.booking.com/"
                 },
                 {
                     name: `${destination} Guesthouse`,
@@ -669,7 +675,7 @@
                     price_per_night: Math.round(Math.random() * 60 + 40),
                     amenities: ["Kitchen", "WiFi", "Garden"],
                     image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
-                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=guesthouse`
+                    bookingUrl: "https://www.booking.com/"
                 }
             ];
             
@@ -725,7 +731,7 @@
                     price: Math.round(Math.random() * 300 + 200),
                     includes: ["Equipment", "Guide", "Boat", "Tanks"],
                     certification: "Open Water Required",
-                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=explorer`
+                    bookingUrl: "https://www.padi.com/"
                 },
                 {
                     name: `${destination} Adventure Package`,
@@ -734,7 +740,7 @@
                     price: Math.round(Math.random() * 500 + 400),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
                     certification: "Advanced Open Water",
-                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=adventure`
+                    bookingUrl: "https://www.padi.com/"
                 },
                 {
                     name: `${destination} Pro Package`,
@@ -743,7 +749,7 @@
                     price: Math.round(Math.random() * 700 + 600),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
                     certification: "Rescue Diver",
-                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=pro`
+                    bookingUrl: "https://www.padi.com/"
                 }
             ];
             
@@ -966,7 +972,7 @@
                     stops: "1 stop",
                     departureTime: "22:45",
                     arrivalTime: "17:15+1",
-                    bookingUrl: `https://www.emirates.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.emirates.com/"
                 },
                 {
                     airline: "Qatar Airways",
@@ -977,7 +983,7 @@
                     stops: "1 stop",
                     departureTime: "09:30",
                     arrivalTime: "08:45+1",
-                    bookingUrl: `https://www.qatarairways.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.qatarairways.com/"
                 },
                 {
                     airline: "Singapore Airlines",
@@ -988,7 +994,7 @@
                     stops: "2 stops",
                     departureTime: "15:20",
                     arrivalTime: "14:40+2",
-                    bookingUrl: `https://www.singaporeair.com/book-flight?from=${departureCity}&to=${destination}`
+                    bookingUrl: "https://www.singaporeair.com/"
                 }
             ];
             
@@ -2122,18 +2128,12 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Departure City</label>
-                                        <select id="departureCity" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <select id="departureCity" onchange="updateFlightOptions()" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                             <option value="">Select country first...</option>
                                         </select>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-                                <textarea id="tripDescription" placeholder="Describe your diving adventure..." rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                            </div>
-                        </div>
                         
                         <!-- Step 2: Pricing Calculator -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
