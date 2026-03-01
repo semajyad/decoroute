@@ -1,0 +1,17 @@
+backend/
+*.md
+*.png
+*.jpg
+*.jpeg
+.git/
+.gitignore
+node_modules/
+package-lock.json
+comprehensive-test-suite.js
+dive-edit-test.js
+quick-test.js
+simple.html
+auth-test-*.png
+test-failure-*.png
+bandit-report.json
+safety-report.json

@@ -1,1 +1,0 @@
-{"version": 2, "name": "decoroute", "builds": [{"src": "index.html", "use": "@vercel/static"}], "routes": [{"src": "/", "dest": "/index.html"}], "env": {"API_URL": "https://decoroute-api.onrender.com"}}
