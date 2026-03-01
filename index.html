@@ -659,7 +659,13 @@
                 'equipment': '🎒'
             };
             return icons[component] || '📋';
-        }    
+        }
+        
+        function saveCurrentTrip() {
+            console.log('💾 Saving trip...');
+            console.log('Dives:', dives.length);
+            console.log('Flight time:', flightTime);
+            
             if (dives.length === 0 || !flightTime) {
                 alert('Please add dives and set flight time before saving');
                 return;
