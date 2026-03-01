@@ -1,17 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import hashlib
+import secrets
 
 from database import get_db, settings
 from models import User
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token", auto_error=False)
 
 
 class UserCreate(BaseModel):
@@ -41,11 +41,13 @@ class Token(BaseModel):
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    # Simple SHA-256 verification for now
+    return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
 
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    # Simple SHA-256 hashing for now (more secure methods can be added later)
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def get_user_by_email(db: Session, email: str):
@@ -125,20 +127,24 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     return db_user
 
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = authenticate_user(db, form_data.username, form_data.password)
+@router.post("/login", response_model=UserResponse)
+async def login(user_data: dict, db: Session = Depends(get_db)):
+    username = user_data.get("username")
+    password = user_data.get("password")
+    
+    if not username or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password required"
+        )
+    
+    user = authenticate_user(db, username, password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
-    access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return user
 
 
 @router.get("/me", response_model=UserResponse)

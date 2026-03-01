@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DecoRoute - Safe Transit Engine</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/axios@1.6.0/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root" class="container mx-auto px-4 py-8"></div>
+    <script>
+        const API_URL = 'https://decoroute.onrender.com';
+        
+        function SafeTransitChecker() {
+            const [dives, setDives] = React.useState([]);
+            const [flightTime, setFlightTime] = React.useState('');
+            const [result, setResult] = React.useState(null);
+            const [isLoading, setIsLoading] = React.useState(false);
+            
+            const checkSafety = async () => {
+                setIsLoading(true);
+                try {
+                    const response = await axios.post(`${API_URL}/api/transit/check-safety`, {
+                        dives,
+                        flight_datetime: flightTime
+                    });
+                    setResult(response.data);
+                } catch (error) {
+                    console.error('API Error:', error);
+                    setResult({ error: error.message });
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            
+            const addDive = () => {
+                const newDive = {
+                    dive_datetime: new Date().toISOString(),
+                    max_depth: 20.0,
+                    bottom_time: 45
+                };
+                setDives([...dives, newDive]);
+            };
+            
+            return React.createElement('div', { className: 'max-w-4xl mx-auto p-8' }, 
+                React.createElement('div', { className: 'bg-white rounded-lg shadow-lg p-6 mb-8' }, 
+                    React.createElement('h1', { className: 'text-3xl font-bold text-blue-600 mb-8' }, 'DecoRoute - Safe Transit Engine'),
+                    React.createElement('p', { className: 'text-gray-600 mb-8' }, 'Enterprise scuba diving trip planner with production Safe Transit Engine'),
+                    
+                    React.createElement('div', { className: 'space-y-6' }, 
+                        // Flight Time Input
+                        React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' }, 
+                            React.createElement('h2', { className: 'text-xl font-semibold mb-4' }, 'Trip Planning'),
+                            React.createElement('div', { className: 'space-y-4' }, 
+                                React.createElement('div', {}, 
+                                    React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Flight Date & Time'),
+                                    React.createElement('input', {
+                                        type: 'datetime-local',
+                                        value: flightTime,
+                                        onChange: (e) => setFlightTime(e.target.value),
+                                        className: 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                                    })
+                                ),
+                                React.createElement('button', {
+                                    onClick: addDive,
+                                    className: 'bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full'
+                                }, 'Add Dive')
+                            )
+                        ),
+                        
+                        // Current Dives
+                        React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' }, 
+                            React.createElement('h3', { className: 'text-lg font-semibold mb-4' }, 'Current Dives'),
+                            React.createElement('div', { className: 'space-y-2' }, 
+                                dives.length === 0 ? 
+                                    React.createElement('p', { className: 'text-gray-500' }, 'No dives added yet') :
+                                    dives.map((dive, i) => 
+                                        React.createElement('div', { key: i, className: 'bg-gray-50 p-4 rounded-lg' }, 
+                                            React.createElement('h4', { className: 'font-medium' }, `Dive ${i + 1}`),
+                                            React.createElement('p', { className: 'text-sm text-gray-600' }, `Date: ${new Date(dive.dive_datetime).toLocaleString()}`)
+                                        )
+                                    )
+                            )
+                        ),
+                        
+                        // Check Safety Button
+                        React.createElement('div', { className: 'bg-white p-6 rounded-lg shadow' }, 
+                            React.createElement('button', {
+                                onClick: checkSafety,
+                                disabled: dives.length === 0 || !flightTime || isLoading,
+                                className: 'bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 w-full disabled:opacity-50 cursor-not-allowed'
+                            }, isLoading ? 'Checking Safety...' : 'Check Flight Safety'),
+                            
+                            // Results
+                            React.createElement('div', { className: 'mt-6 p-4 bg-gray-100 rounded-lg' }, 
+                                result ? (
+                                    React.createElement('div', { className: 'text-sm' }, 
+                                        React.createElement('h4', { className: 'font-semibold mb-2' }, result.is_safe ? '✅ Safe for Flight' : '⚠️ Not Safe for Flight'),
+                                        React.createElement('p', { className: 'text-gray-700' }, result.message || 'No results'),
+                                        result.recommended_wait_time && React.createElement('p', { className: 'text-sm text-blue-600' }, `Recommended wait: ${result.recommended_wait_time}`)
+                                    )
+                                ) : (
+                                    React.createElement('p', { className: 'text-gray-500' }, 'Enter flight details to check safety')
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+        
+        ReactDOM.render(React.createElement(SafeTransitChecker), document.getElementById('root'));
+    </script>
+</body>
+</html>

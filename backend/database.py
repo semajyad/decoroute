@@ -5,7 +5,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://decoroute_user:secure_password_123@localhost:5432/decoroute"
+    # Force SQLite for local development
+    database_url: str = "sqlite:///./decoroute.db"
     secret_key: str = "your-secret-key-change-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
@@ -15,7 +16,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-engine = create_engine(settings.database_url)
+
+# Force SQLite for local development
+database_url = "sqlite:///./decoroute.db"
+engine = create_engine(database_url, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
