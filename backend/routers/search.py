@@ -208,7 +208,7 @@ async def get_popular_dive_locations():
     return {"popular_locations": popular_locations}
 
 
-@router.get("/search/health")
+@router.get("/health")
 async def search_health_check():
     """
     Health check for search service
