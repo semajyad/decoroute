@@ -99,7 +99,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate, db: Session = Depends(get_db)):
-    # Simple demo registration without database dependency
+    # Hash password first
+    hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
+    
+    # Try database operations
     try:
         # Check if user already exists (if database works)
         existing_user = db.query(User).filter(
@@ -111,9 +114,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email or username already registered"
             )
-        
-        # Hash password
-        hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
         
         # Create new user in database
         db_user = User(
@@ -130,6 +130,9 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
         db.refresh(db_user)
         return db_user
         
+    except HTTPException:
+        # Re-raise HTTP exceptions (like user already exists)
+        raise
     except Exception as e:
         print(f"Database error: {e}")
         # Fallback to demo mode - create user without database
