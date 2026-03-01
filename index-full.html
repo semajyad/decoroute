@@ -424,7 +424,7 @@
             resultsDiv.classList.remove('hidden');
             
             try {
-                const pricingData = await searchPricing(location, duration);
+                const pricingData = await getPricingBreakdown(location, duration);
                 displayPricingResults(pricingData);
             } catch (error) {
                 console.error('Pricing search failed:', error);
