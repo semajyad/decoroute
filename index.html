@@ -741,6 +741,7 @@
                     <div class="flex space-x-3 mt-6">
                         <button onclick="saveAPIKeys()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save Keys</button>
                         <button onclick="testAPIKeys()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Test APIs</button>
+                        <button onclick="refreshAPIConfig()" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700">Refresh Config</button>
                         <button onclick="closeAPIConfigModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
                     </div>
                 </div>
@@ -826,6 +827,21 @@
             alert('API test complete! Check console for results.');
         }
         
+        // Force refresh API configuration
+        function refreshAPIConfig() {
+            console.log('🔄 Refreshing API configuration...');
+            loadAPIKeys();
+            console.log('🔑 Updated API Config:', {
+                primary: API_CONFIG.primary.headers['X-RapidAPI-Key'] !== 'demo-key-for-testing',
+                kiwi: API_CONFIG.alternatives.kiwi.headers['X-RapidAPI-Key'] !== 'demo-key-for-testing',
+                globalFlights: API_CONFIG.alternatives.globalFlights.headers['X-RapidAPI-Key'] !== 'demo-key-for-testing',
+                aviationstack: API_CONFIG.alternatives.aviationstack.headers.access_key !== 'your-aviationstack-key',
+                hotelsbase: API_CONFIG.alternatives.hotelsbase.headers.apikey !== 'your-hotelsbase-key',
+                padi: API_CONFIG.padi.headers['Authorization'] !== 'Bearer demo-key-for-testing'
+            });
+            alert('API configuration refreshed! Try selecting a destination again.');
+        }
+        
         function closeAPIConfigModal() {
             const modal = document.querySelector('.fixed.inset-0');
             if (modal) modal.remove();
@@ -857,11 +873,11 @@
             }
             
             try {
-                console.log('🏨 Making real API call to Booking.com...');
-                // Real Booking.com API call
-                const response = await fetch(`${API_CONFIG.booking.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}`, {
+                console.log('🏨 Making real API call to Booking COM...');
+                // Use the primary API (Booking COM by DataCrawler)
+                const response = await fetch(`${API_CONFIG.primary.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}`, {
                     method: 'GET',
-                    headers: API_CONFIG.booking.headers
+                    headers: API_CONFIG.primary.headers
                 });
                 
                 console.log('🏨 API Response Status:', response.status);
@@ -893,16 +909,11 @@
             }
             
             try {
-                console.log('🛫 Making real API call to Skyscanner...');
-                // Real Skyscanner API call
-                const departureCode = getAirportCode(departure);
-                const arrivalCode = getAirportCode(arrival);
-                
-                console.log('🛫 Airport Codes:', { departure: departureCode, arrival: arrivalCode });
-                
-                const response = await fetch(`${API_CONFIG.skyscanner.baseUrl}/browsequotes/v1.0/US/${departureCode}/USD/${arrivalCode}/${date}`, {
+                console.log('🛫 Making real API call to Booking COM (flights)...');
+                // Try primary API first (Booking COM includes flights)
+                const response = await fetch(`${API_CONFIG.primary.baseUrl}/flights/search?from=${encodeURIComponent(departure)}&to=${encodeURIComponent(arrival)}&date=${date}`, {
                     method: 'GET',
-                    headers: API_CONFIG.skyscanner.headers
+                    headers: API_CONFIG.primary.headers
                 });
                 
                 console.log('🛫 API Response Status:', response.status);
@@ -1820,6 +1831,7 @@
         window.updateAPIKeys = updateAPIKeys;
         window.loadAPIKeys = loadAPIKeys;
         window.testAPIKeys = testAPIKeys;
+        window.refreshAPIConfig = refreshAPIConfig;
         
         function saveCurrentTrip() {
             console.log('💾 Saving trip...');
