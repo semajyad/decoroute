@@ -1,7 +1,7 @@
 services:
   # FastAPI Web Service
   - type: web
-    name: decoroute-api
+    name: decoroute
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
