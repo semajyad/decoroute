@@ -65,6 +65,11 @@
         let currentTripName = '';
         let currentTripId = null;
         let savedTrips = [];
+        
+        // Track user selections for purchase options
+        let selectedFlight = null;
+        let selectedAccommodation = null;
+        let selectedDivingPackage = null;
         let diveSites = [
             // Belize
             { id: 1, name: "Blue Hole", location: "Belize", description: "World-famous deep blue hole dive adventure", image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop", max_depth: 40 },
@@ -544,6 +549,8 @@
             const destination = document.getElementById('tripDestination').value;
             const flightContainer = document.getElementById('flightOptions');
             
+            console.log('🛫 Updating flight options:', { departureCountry, departureCity, destination });
+            
             if (!departureCountry || !departureCity || !destination) {
                 flightContainer.innerHTML = '<p class="text-gray-500">Select departure location and destination to see flight options</p>';
                 return;
@@ -559,7 +566,8 @@
                     duration: "12h 30m",
                     stops: "1 stop",
                     departureTime: "22:45",
-                    arrivalTime: "17:15+1"
+                    arrivalTime: "17:15+1",
+                    bookingUrl: `https://www.emirates.com/book-flight?from=${departureCity}&to=${destination}`
                 },
                 {
                     airline: "Qatar Airways",
@@ -569,7 +577,8 @@
                     duration: "14h 15m",
                     stops: "1 stop",
                     departureTime: "09:30",
-                    arrivalTime: "08:45+1"
+                    arrivalTime: "08:45+1",
+                    bookingUrl: `https://www.qatarairways.com/book-flight?from=${departureCity}&to=${destination}`
                 },
                 {
                     airline: "Singapore Airlines",
@@ -579,16 +588,17 @@
                     duration: "16h 20m",
                     stops: "2 stops",
                     departureTime: "15:20",
-                    arrivalTime: "14:40+2"
+                    arrivalTime: "14:40+2",
+                    bookingUrl: `https://www.singaporeair.com/book-flight?from=${departureCity}&to=${destination}`
                 }
             ];
             
             let html = '';
             flightOptions.forEach((flight, index) => {
                 html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition cursor-pointer" onclick="selectFlight(${index})">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
                         <div class="flex justify-between items-start">
-                            <div>
+                            <div class="flex-1">
                                 <div class="font-semibold">${flight.airline}</div>
                                 <div class="text-sm text-gray-600">${flight.departure} → ${flight.arrival}</div>
                                 <div class="text-sm text-gray-500">${flight.departureTime} - ${flight.arrivalTime} (${flight.duration})</div>
@@ -597,6 +607,14 @@
                                 <div class="font-bold text-lg">$${flight.price}</div>
                                 <div class="text-sm text-gray-500">${flight.stops}</div>
                             </div>
+                        </div>
+                        <div class="mt-3 flex space-x-2">
+                            <button onclick="selectFlight(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                Select
+                            </button>
+                            <a href="${flight.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                Book Now
+                            </a>
                         </div>
                     </div>
                 `;
@@ -612,6 +630,7 @@
         
         function updateAccommodationOptions() {
             const destination = document.getElementById('tripDestination').value;
+            const duration = parseInt(document.getElementById('tripDuration').value) || 7;
             const container = document.getElementById('accommodationOptions');
             
             if (!destination) {
@@ -626,7 +645,8 @@
                     rating: 4.5,
                     price_per_night: Math.round(Math.random() * 150 + 100),
                     amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
-                    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop"
+                    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=resort`
                 },
                 {
                     name: `${destination} Beach Hotel`,
@@ -634,7 +654,8 @@
                     rating: 4.0,
                     price_per_night: Math.round(Math.random() * 100 + 80),
                     amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
-                    image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop"
+                    image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=hotel`
                 },
                 {
                     name: `${destination} Guesthouse`,
@@ -642,25 +663,38 @@
                     rating: 3.5,
                     price_per_night: Math.round(Math.random() * 60 + 40),
                     amenities: ["Kitchen", "WiFi", "Garden"],
-                    image: "https://images.unsplash.com/photo-1564013799919-600e776d2fc7?w=300&h=200&fit=crop"
+                    image: "https://images.unsplash.com/photo-1564013799919-600e776d2fc7?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=guesthouse`
                 }
             ];
             
             let html = '';
             accommodations.forEach((acc, index) => {
+                const totalCost = acc.price_per_night * duration;
                 html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition cursor-pointer" onclick="selectAccommodation(${index})">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
                         <div class="flex space-x-4">
                             <img src="${acc.image}" alt="${acc.name}" class="w-20 h-20 rounded-lg object-cover">
                             <div class="flex-1">
                                 <div class="font-semibold">${acc.name}</div>
                                 <div class="text-sm text-gray-600">${acc.type} • ⭐ ${acc.rating}</div>
                                 <div class="text-sm text-gray-500">${acc.amenities.join(" • ")}</div>
+                                <div class="text-sm font-semibold text-green-600">${duration} nights = $${totalCost} total</div>
                             </div>
                             <div class="text-right">
                                 <div class="font-bold text-lg">$${acc.price_per_night}</div>
                                 <div class="text-sm text-gray-500">per night</div>
+                                <div class="text-sm font-semibold text-green-600">$${totalCost}</div>
+                                <div class="text-xs text-gray-500">total stay</div>
                             </div>
+                        </div>
+                        <div class="mt-3 flex space-x-2">
+                            <button onclick="selectAccommodation(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                Select
+                            </button>
+                            <a href="${acc.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                Book Now
+                            </a>
                         </div>
                     </div>
                 `;
@@ -685,7 +719,8 @@
                     duration: "3 days",
                     price: Math.round(Math.random() * 300 + 200),
                     includes: ["Equipment", "Guide", "Boat", "Tanks"],
-                    certification: "Open Water Required"
+                    certification: "Open Water Required",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=explorer`
                 },
                 {
                     name: `${destination} Adventure Package`,
@@ -693,7 +728,8 @@
                     duration: "5 days",
                     price: Math.round(Math.random() * 500 + 400),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
-                    certification: "Advanced Open Water"
+                    certification: "Advanced Open Water",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=adventure`
                 },
                 {
                     name: `${destination} Pro Package`,
@@ -701,14 +737,15 @@
                     duration: "7 days",
                     price: Math.round(Math.random() * 700 + 600),
                     includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
-                    certification: "Rescue Diver"
+                    certification: "Rescue Diver",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=pro`
                 }
             ];
             
             let html = '';
             packages.forEach((pkg, index) => {
                 html += `
-                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition cursor-pointer" onclick="selectDivingPackage(${index})">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 transition">
                         <div class="flex justify-between items-start">
                             <div>
                                 <div class="font-semibold">${pkg.name}</div>
@@ -721,6 +758,14 @@
                                 <div class="text-sm text-gray-500">total</div>
                             </div>
                         </div>
+                        <div class="mt-3 flex space-x-2">
+                            <button onclick="selectDivingPackage(${index})" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                Select
+                            </button>
+                            <a href="${pkg.bookingUrl}" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
+                                Book Now
+                            </a>
+                        </div>
                     </div>
                 `;
             });
@@ -728,22 +773,170 @@
             container.innerHTML = html;
         }
         
+        function updateSelectedOptionsSummary() {
+            const summaryContainer = document.getElementById('selectedOptionsSummary');
+            let html = '';
+            let totalCost = 0;
+            
+            if (selectedFlight) {
+                html += `<div class="flex justify-between items-center p-2 bg-white rounded">
+                    <span>✈️ ${selectedFlight.airline} (${selectedFlight.departure} → ${selectedFlight.arrival})</span>
+                    <span class="font-semibold">$${selectedFlight.price}</span>
+                </div>`;
+                totalCost += selectedFlight.price;
+            }
+            
+            if (selectedAccommodation) {
+                const duration = parseInt(document.getElementById('tripDuration').value) || 7;
+                const totalStayCost = selectedAccommodation.price_per_night * duration;
+                html += `<div class="flex justify-between items-center p-2 bg-white rounded">
+                    <span>🏨 ${selectedAccommodation.name} (${duration} nights)</span>
+                    <span class="font-semibold">$${totalStayCost}</span>
+                </div>`;
+                totalCost += totalStayCost;
+            }
+            
+            if (selectedDivingPackage) {
+                html += `<div class="flex justify-between items-center p-2 bg-white rounded">
+                    <span>🤿 ${selectedDivingPackage.name} (${selectedDivingPackage.dives} dives)</span>
+                    <span class="font-semibold">$${selectedDivingPackage.price}</span>
+                </div>`;
+                totalCost += selectedDivingPackage.price;
+            }
+            
+            if (html === '') {
+                html = '<p class="text-gray-500">Make your selections below to see your trip summary</p>';
+            } else {
+                html += `<div class="mt-3 pt-3 border-t border-blue-200">
+                    <div class="flex justify-between items-center font-bold text-lg">
+                        <span>Total Selected Cost:</span>
+                        <span class="text-green-600">$${totalCost}</span>
+                    </div>
+                </div>`;
+            }
+            
+            summaryContainer.innerHTML = html;
+        }
+        
         function selectFlight(index) {
-            console.log('🛫 Flight selected:', index);
-            // Store selected flight and update pricing
-            alert('Flight option selected! This will be integrated into your trip total.');
+            const departureCountry = document.getElementById('departureCountry').value;
+            const departureCity = document.getElementById('departureCity').value;
+            const destination = document.getElementById('tripDestination').value;
+            
+            // Mock flight data (same as in updateFlightOptions)
+            const flightOptions = [
+                {
+                    airline: "Emirates",
+                    departure: `${departureCity}, ${departureCountry}`,
+                    arrival: destination,
+                    price: Math.round(Math.random() * 2000 + 800),
+                    duration: "12h 30m",
+                    stops: "1 stop",
+                    departureTime: "22:45",
+                    arrivalTime: "17:15+1",
+                    bookingUrl: `https://www.emirates.com/book-flight?from=${departureCity}&to=${destination}`
+                },
+                {
+                    airline: "Qatar Airways",
+                    departure: `${departureCity}, ${departureCountry}`,
+                    arrival: destination,
+                    price: Math.round(Math.random() * 2000 + 750),
+                    duration: "14h 15m",
+                    stops: "1 stop",
+                    departureTime: "09:30",
+                    arrivalTime: "08:45+1",
+                    bookingUrl: `https://www.qatarairways.com/book-flight?from=${departureCity}&to=${destination}`
+                },
+                {
+                    airline: "Singapore Airlines",
+                    departure: `${departureCity}, ${departureCountry}`,
+                    arrival: destination,
+                    price: Math.round(Math.random() * 2000 + 900),
+                    duration: "16h 20m",
+                    stops: "2 stops",
+                    departureTime: "15:20",
+                    arrivalTime: "14:40+2",
+                    bookingUrl: `https://www.singaporeair.com/book-flight?from=${departureCity}&to=${destination}`
+                }
+            ];
+            
+            selectedFlight = flightOptions[index];
+            updateSelectedOptionsSummary();
+            console.log('🛫 Flight selected:', selectedFlight);
         }
         
         function selectAccommodation(index) {
-            console.log('🏨 Accommodation selected:', index);
-            // Store selected accommodation and update pricing
-            alert('Accommodation selected! This will be integrated into your trip total.');
+            const destination = document.getElementById('tripDestination').value;
+            const accommodations = [
+                {
+                    name: `${destination} Dive Resort`,
+                    type: "Resort",
+                    rating: 4.5,
+                    price_per_night: Math.round(Math.random() * 150 + 100),
+                    amenities: ["Dive Center", "Restaurant", "Pool", "WiFi"],
+                    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=resort`
+                },
+                {
+                    name: `${destination} Beach Hotel`,
+                    type: "Hotel",
+                    rating: 4.0,
+                    price_per_night: Math.round(Math.random() * 100 + 80),
+                    amenities: ["Beach Access", "Restaurant", "Bar", "WiFi"],
+                    image: "https://images.unsplash.com/photo-1520250497591-112f1f40d3f4?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=hotel`
+                },
+                {
+                    name: `${destination} Guesthouse`,
+                    type: "Guesthouse",
+                    rating: 3.5,
+                    price_per_night: Math.round(Math.random() * 60 + 40),
+                    amenities: ["Kitchen", "WiFi", "Garden"],
+                    image: "https://images.unsplash.com/photo-1564013799919-600e776d2fc7?w=300&h=200&fit=crop",
+                    bookingUrl: `https://www.booking.com/searchresults.html?city=${destination}&label=guesthouse`
+                }
+            ];
+            
+            selectedAccommodation = accommodations[index];
+            updateSelectedOptionsSummary();
+            console.log('🏨 Accommodation selected:', selectedAccommodation);
         }
         
         function selectDivingPackage(index) {
-            console.log('🤿 Diving package selected:', index);
-            // Store selected package and update pricing
-            alert('Diving package selected! This will be integrated into your trip total.');
+            const destination = document.getElementById('tripDestination').value;
+            const packages = [
+                {
+                    name: `${destination} Explorer Package`,
+                    dives: 5,
+                    duration: "3 days",
+                    price: Math.round(Math.random() * 300 + 200),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks"],
+                    certification: "Open Water Required",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=explorer`
+                },
+                {
+                    name: `${destination} Adventure Package`,
+                    dives: 10,
+                    duration: "5 days",
+                    price: Math.round(Math.random() * 500 + 400),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox"],
+                    certification: "Advanced Open Water",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=adventure`
+                },
+                {
+                    name: `${destination} Pro Package`,
+                    dives: 15,
+                    duration: "7 days",
+                    price: Math.round(Math.random() * 700 + 600),
+                    includes: ["Equipment", "Guide", "Boat", "Tanks", "Nitrox", "Camera"],
+                    certification: "Rescue Diver",
+                    bookingUrl: `https://www.padi.com/courses?location=${destination}&package=pro`
+                }
+            ];
+            
+            selectedDivingPackage = packages[index];
+            updateSelectedOptionsSummary();
+            console.log('🤿 Diving package selected:', selectedDivingPackage);
         }
         
         function updateTripDates() {
@@ -895,6 +1088,7 @@
         window.updatePurchaseOptions = updatePurchaseOptions;
         window.updateAccommodationOptions = updateAccommodationOptions;
         window.updateDivingPackages = updateDivingPackages;
+        window.updateSelectedOptionsSummary = updateSelectedOptionsSummary;
         window.selectFlight = selectFlight;
         window.selectAccommodation = selectAccommodation;
         window.selectDivingPackage = selectDivingPackage;
@@ -1824,6 +2018,14 @@
                         <!-- Step 3: Purchase Options -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
                             <h2 class="text-xl font-semibold mb-4">Step 3: Purchase Options</h2>
+                            
+                            <!-- Selected Options Summary -->
+                            <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                                <h3 class="text-lg font-semibold mb-3">📋 Your Selections</h3>
+                                <div id="selectedOptionsSummary" class="space-y-2">
+                                    <p class="text-gray-500">Make your selections below to see your trip summary</p>
+                                </div>
+                            </div>
                             
                             <!-- Flight Options -->
                             <div class="mb-6">
