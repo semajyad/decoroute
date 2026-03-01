@@ -597,8 +597,18 @@
         
         // Check if API keys are configured
         function areAPIKeysConfigured() {
-            return API_CONFIG.rapidApiKey !== 'demo-key-for-testing' && 
-                   API_CONFIG.padi.headers['Authorization'] !== 'Bearer demo-key-for-testing';
+            const hasRapidKey = API_CONFIG.rapidApiKey !== 'demo-key-for-testing' && API_CONFIG.rapidApiKey !== '';
+            const hasPadiKey = API_CONFIG.padi.headers['Authorization'] !== 'Bearer demo-key-for-testing' && API_CONFIG.padi.headers['Authorization'] !== 'Bearer ';
+            
+            console.log('🔑 API Key Check:', {
+                rapidKey: API_CONFIG.rapidApiKey,
+                hasRapidKey: hasRapidKey,
+                padiKey: API_CONFIG.padi.headers['Authorization'],
+                hasPadiKey: hasPadiKey,
+                configured: hasRapidKey || hasPadiKey
+            });
+            
+            return hasRapidKey || hasPadiKey;
         }
         
         // Function to update API keys
@@ -672,6 +682,7 @@
         // API-based booking functions (with real API integration)
         async function searchAccommodations(destination, checkIn, checkOut) {
             console.log('🏨 Searching accommodations for:', destination);
+            console.log('🔑 API Status:', areAPIKeysConfigured() ? 'Using real APIs' : 'Using mock data');
             
             if (!areAPIKeysConfigured()) {
                 console.log('🏨 API keys not configured, using enhanced mock data');
@@ -679,27 +690,35 @@
             }
             
             try {
+                console.log('🏨 Making real API call to Booking.com...');
                 // Real Booking.com API call
                 const response = await fetch(`${API_CONFIG.booking.baseUrl}/hotels/searchDestination?query=${encodeURIComponent(destination)}`, {
                     method: 'GET',
                     headers: API_CONFIG.booking.headers
                 });
                 
+                console.log('🏨 API Response Status:', response.status);
+                console.log('🏨 API Response Headers:', response.headers);
+                
                 if (response.ok) {
                     const data = await response.json();
                     console.log('🏨 Real API response:', data);
                     return transformBookingData(data, destination, checkIn, checkOut);
                 } else {
-                    throw new Error(`API returned ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('🏨 API Error Response:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
                 }
             } catch (error) {
-                console.log('🏨 API search failed, using mock data:', error);
+                console.error('🏨 API search failed, using mock data:', error);
+                console.log('🏨 Falling back to mock data due to error');
                 return getMockAccommodations(destination, checkIn, checkOut);
             }
         }
         
         async function searchFlights(departure, arrival, date) {
             console.log('🛫 Searching flights from:', departure, 'to:', arrival);
+            console.log('🔑 API Status:', areAPIKeysConfigured() ? 'Using real APIs' : 'Using mock data');
             
             if (!areAPIKeysConfigured()) {
                 console.log('🛫 API keys not configured, using enhanced mock data');
@@ -707,30 +726,39 @@
             }
             
             try {
+                console.log('🛫 Making real API call to Skyscanner...');
                 // Real Skyscanner API call
                 const departureCode = getAirportCode(departure);
                 const arrivalCode = getAirportCode(arrival);
+                
+                console.log('🛫 Airport Codes:', { departure: departureCode, arrival: arrivalCode });
                 
                 const response = await fetch(`${API_CONFIG.skyscanner.baseUrl}/browsequotes/v1.0/US/${departureCode}/USD/${arrivalCode}/${date}`, {
                     method: 'GET',
                     headers: API_CONFIG.skyscanner.headers
                 });
                 
+                console.log('🛫 API Response Status:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
                     console.log('🛫 Real API response:', data);
                     return transformFlightData(data, departure, arrival, date);
                 } else {
-                    throw new Error(`API returned ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('🛫 API Error Response:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
                 }
             } catch (error) {
-                console.log('🛫 API search failed, using mock data:', error);
+                console.error('🛫 API search failed, using mock data:', error);
+                console.log('🛫 Falling back to mock data due to error');
                 return getMockFlights(departure, arrival, date);
             }
         }
         
         async function searchDivingPackages(destination) {
             console.log('🤿 Searching diving packages for:', destination);
+            console.log('🔑 API Status:', areAPIKeysConfigured() ? 'Using real APIs' : 'Using mock data');
             
             if (!areAPIKeysConfigured()) {
                 console.log('🤿 API keys not configured, using enhanced mock data');
@@ -738,21 +766,27 @@
             }
             
             try {
+                console.log('🤿 Making real API call to PADI...');
                 // Real PADI API call
                 const response = await fetch(`${API_CONFIG.padi.baseUrl}/courses?location=${encodeURIComponent(destination)}`, {
                     method: 'GET',
                     headers: API_CONFIG.padi.headers
                 });
                 
+                console.log('🤿 API Response Status:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
                     console.log('🤿 Real API response:', data);
                     return transformPadiData(data, destination);
                 } else {
-                    throw new Error(`API returned ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('🤿 API Error Response:', errorText);
+                    throw new Error(`API returned ${response.status}: ${errorText}`);
                 }
             } catch (error) {
-                console.log('🤿 API search failed, using mock data:', error);
+                console.error('🤿 API search failed, using mock data:', error);
+                console.log('🤿 Falling back to mock data due to error');
                 return getMockDivingPackages(destination);
             }
         }
